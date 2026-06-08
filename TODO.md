@@ -37,7 +37,7 @@ Current source files:
 
 ## Phase 2: Supabase Foundation
 
-- [ ] Step 2.1: Configure Supabase client helpers.
+- [x] Step 2.1: Configure Supabase client helpers.
 - [ ] Step 2.2: Create initial database migration for profiles, portfolios, portfolio membership, properties, and property access.
 - [ ] Step 2.3: Create RLS policies for Host and Co-owner access.
 - [ ] Step 2.4: Generate Supabase TypeScript database types.
