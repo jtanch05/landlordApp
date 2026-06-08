@@ -31,9 +31,9 @@ Current source files:
 - [x] Step 1.3: Create the route groups `(auth)` and `(app)`.
 - [x] Step 1.4: Create top-level app routes: dashboard, properties, vendors, reports, activity, settings.
 - [x] Step 1.5: Create the property workspace route at `properties/[propertyId]`.
-- [ ] Step 1.6: Add the folder structure from `ARCHITECTURE.md`.
+- [x] Step 1.6: Add the folder structure from `ARCHITECTURE.md`.
 - [x] Step 1.7: Configure lint/build scripts.
-- [ ] Step 1.8: Add environment variable template.
+- [x] Step 1.8: Add environment variable template.
 
 ## Phase 2: Supabase Foundation
 
