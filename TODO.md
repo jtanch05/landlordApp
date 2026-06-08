@@ -28,9 +28,9 @@ Current source files:
 
 - [x] Step 1.1: Initialize the Next.js App Router project with TypeScript.
 - [x] Step 1.2: Add Tailwind CSS and base layout styling.
-- [ ] Step 1.3: Create the route groups `(auth)` and `(app)`.
-- [ ] Step 1.4: Create top-level app routes: dashboard, properties, vendors, reports, activity, settings.
-- [ ] Step 1.5: Create the property workspace route at `properties/[propertyId]`.
+- [x] Step 1.3: Create the route groups `(auth)` and `(app)`.
+- [x] Step 1.4: Create top-level app routes: dashboard, properties, vendors, reports, activity, settings.
+- [x] Step 1.5: Create the property workspace route at `properties/[propertyId]`.
 - [ ] Step 1.6: Add the folder structure from `ARCHITECTURE.md`.
 - [x] Step 1.7: Configure lint/build scripts.
 - [ ] Step 1.8: Add environment variable template.
