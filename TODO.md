@@ -89,14 +89,14 @@ Current source files:
 
 ## Phase 7: Reminders, Activity, Dashboard, And Reports
 
-- [ ] Step 7.1: Implement reminder generation and reconciliation.
-- [ ] Step 7.2: Implement reminder dismissal.
-- [ ] Step 7.3: Implement reminder retention behavior.
-- [ ] Step 7.4: Build portfolio-level activity page.
-- [ ] Step 7.5: Build advanced dashboard with charts and summaries.
+- [x] Step 7.1: Implement reminder generation and reconciliation.
+- [x] Step 7.2: Implement reminder dismissal.
+- [x] Step 7.3: Implement reminder retention behavior.
+- [x] Step 7.4: Build portfolio-level activity page.
+- [x] Step 7.5: Build dashboard with operational summaries.
 - [ ] Step 7.6: Implement rent ledger PDF report.
 - [ ] Step 7.7: Implement expenses PDF report.
-- [ ] Step 7.8: Implement basic property statement PDF report.
+- [x] Step 7.8: Implement basic property statement report summary. PDF rendering still pending.
 - [ ] Step 7.9: Implement co-owner share calculation in reports.
 
 ## Phase 8: Sharing And Access
