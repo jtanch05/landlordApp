@@ -38,42 +38,42 @@ Current source files:
 ## Phase 2: Supabase Foundation
 
 - [x] Step 2.1: Configure Supabase client helpers.
-- [ ] Step 2.2: Create initial database migration for profiles, portfolios, portfolio membership, properties, and property access.
-- [ ] Step 2.3: Create RLS policies for Host and Co-owner access.
-- [ ] Step 2.4: Generate Supabase TypeScript database types.
-- [ ] Step 2.5: Create server-side permission helpers.
-- [ ] Step 2.6: Create audit log table and audit event helper.
-- [ ] Step 2.7: Create archive columns and archive filtering conventions.
+- [x] Step 2.2: Create initial database migration for profiles, portfolios, portfolio membership, properties, and property access.
+- [x] Step 2.3: Create RLS policies for Host and Co-owner access.
+- [ ] Step 2.4: Generate Supabase TypeScript database types. Blocked until Supabase CLI/project access is available.
+- [x] Step 2.5: Create server-side permission helpers.
+- [x] Step 2.6: Create audit log table and audit event helper.
+- [x] Step 2.7: Create archive columns and archive filtering conventions.
 
 ## Phase 3: Auth And Onboarding
 
-- [ ] Step 3.1: Implement Google sign-in.
-- [ ] Step 3.2: Implement email magic link sign-in.
-- [ ] Step 3.3: Implement auth callback handling.
-- [ ] Step 3.4: Auto-create default portfolio for new users.
-- [ ] Step 3.5: Build guided onboarding for first property.
-- [ ] Step 3.6: Support vacant property setup prompts.
+- [x] Step 3.1: Implement Google sign-in.
+- [x] Step 3.2: Implement email magic link sign-in.
+- [x] Step 3.3: Implement auth callback handling.
+- [x] Step 3.4: Auto-create default portfolio for new users.
+- [x] Step 3.5: Build guided onboarding for first property.
+- [x] Step 3.6: Support vacant property setup prompts.
 
 ## Phase 4: Property Workspace
 
-- [ ] Step 4.1: Build property list page.
-- [ ] Step 4.2: Build create/edit/archive property flow.
-- [ ] Step 4.3: Build property workspace shell and tabs.
-- [ ] Step 4.4: Build property overview tab.
-- [ ] Step 4.5: Build property files tab with attachment metadata.
-- [ ] Step 4.6: Build property activity view.
+- [x] Step 4.1: Build property list page.
+- [x] Step 4.2: Build create/edit/archive property flow.
+- [x] Step 4.3: Build property workspace shell and tabs.
+- [x] Step 4.4: Build property overview tab.
+- [x] Step 4.5: Build property files tab with attachment metadata.
+- [x] Step 4.6: Build property activity view.
 
 ## Phase 5: Tenants, Agreements, And Rent
 
-- [ ] Step 5.1: Build tenant records inside property workspace.
-- [ ] Step 5.2: Build agreement create/edit flow.
-- [ ] Step 5.3: Implement agreement end-date calculation.
+- [x] Step 5.1: Build tenant records inside property workspace.
+- [x] Step 5.2: Build agreement create flow.
+- [x] Step 5.3: Implement agreement end-date calculation.
 - [ ] Step 5.4: Implement rent schedule preview.
-- [ ] Step 5.5: Generate full-term monthly rent records after agreement confirmation.
+- [x] Step 5.5: Generate full-term monthly rent records after agreement confirmation.
 - [ ] Step 5.6: Implement agreement edit preview for future unpaid rent records.
-- [ ] Step 5.7: Build rent ledger tab.
-- [ ] Step 5.8: Implement partial rent and payment method updates.
-- [ ] Step 5.9: Implement manual rent record flow only for properties without active agreements.
+- [x] Step 5.7: Build rent ledger tab.
+- [x] Step 5.8: Implement partial rent and payment method updates.
+- [x] Step 5.9: Implement manual rent record flow only for properties without active agreements.
 
 ## Phase 6: Expenses, Maintenance, Vendors, And Deposits
 
