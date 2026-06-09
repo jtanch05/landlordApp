@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   archivePropertyAction,
@@ -149,14 +150,7 @@ const workspaceTabs = [
   "Activity",
 ];
 
-async function getProperty(propertyId: string) {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-
-  if (!userData.user) {
-    redirect("/login");
-  }
-
+async function getProperty(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("properties")
     .select("id,nickname,type,status,address_line1,city,state,postcode,notes")
@@ -171,9 +165,7 @@ async function getProperty(propertyId: string) {
   return data as PropertyDetail;
 }
 
-async function getPropertyActivity(propertyId: string) {
-  const supabase = await createClient();
-
+async function getPropertyActivity(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("audit_events")
     .select("id,action,summary,created_at")
@@ -188,9 +180,7 @@ async function getPropertyActivity(propertyId: string) {
   return data as ActivityEvent[];
 }
 
-async function getPropertyAttachments(propertyId: string) {
-  const supabase = await createClient();
-
+async function getPropertyAttachments(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("attachments")
     .select("id,file_name,target_type,size_bytes,is_private,created_at")
@@ -205,9 +195,7 @@ async function getPropertyAttachments(propertyId: string) {
   return data as AttachmentSummary[];
 }
 
-async function getTenants(propertyId: string) {
-  const supabase = await createClient();
-
+async function getTenants(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("tenants")
     .select("id,name,phone,email,status")
@@ -222,9 +210,7 @@ async function getTenants(propertyId: string) {
   return data as TenantSummary[];
 }
 
-async function getAgreements(propertyId: string) {
-  const supabase = await createClient();
-
+async function getAgreements(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("agreements")
     .select("id,type,start_date,end_date,rent_amount_cents")
@@ -239,9 +225,7 @@ async function getAgreements(propertyId: string) {
   return data as AgreementSummary[];
 }
 
-async function getRentRecords(propertyId: string) {
-  const supabase = await createClient();
-
+async function getRentRecords(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("rent_records")
     .select("id,month,due_date,amount_due_cents,amount_paid_cents,status")
@@ -257,9 +241,7 @@ async function getRentRecords(propertyId: string) {
   return data as RentRecordSummary[];
 }
 
-async function getExpenseCategories() {
-  const supabase = await createClient();
-
+async function getExpenseCategories(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("expense_categories")
     .select("id,name,default_tax_deductible")
@@ -273,9 +255,7 @@ async function getExpenseCategories() {
   return data as ExpenseCategorySummary[];
 }
 
-async function getExpenses(propertyId: string) {
-  const supabase = await createClient();
-
+async function getExpenses(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("expenses")
     .select("id,description,amount_cents,status,expense_date")
@@ -291,9 +271,7 @@ async function getExpenses(propertyId: string) {
   return data as ExpenseSummary[];
 }
 
-async function getVendors() {
-  const supabase = await createClient();
-
+async function getVendors(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("vendors")
     .select("id,name,service_type")
@@ -307,9 +285,7 @@ async function getVendors() {
   return data as VendorSummary[];
 }
 
-async function getMaintenanceIssues(propertyId: string) {
-  const supabase = await createClient();
-
+async function getMaintenanceIssues(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("maintenance_issues")
     .select("id,description,reported_date,status,cost_cents")
@@ -325,9 +301,7 @@ async function getMaintenanceIssues(propertyId: string) {
   return data as MaintenanceIssueSummary[];
 }
 
-async function getDeposits(propertyId: string) {
-  const supabase = await createClient();
-
+async function getDeposits(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("deposits")
     .select("id,label,amount_cents,status,refund_date")
@@ -342,9 +316,7 @@ async function getDeposits(propertyId: string) {
   return data as DepositSummary[];
 }
 
-async function getPropertyAccess(propertyId: string) {
-  const supabase = await createClient();
-
+async function getPropertyAccess(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("property_access")
     .select("id,user_id,can_edit,can_view_tenant_contact,created_at")
@@ -359,9 +331,7 @@ async function getPropertyAccess(propertyId: string) {
   return data as PropertyAccessSummary[];
 }
 
-async function getInvitations(propertyId: string) {
-  const supabase = await createClient();
-
+async function getInvitations(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
     .from("invitations")
     .select("id,email,can_edit,status,expires_at")
@@ -379,19 +349,42 @@ export default async function PropertyWorkspacePage({
   params,
 }: PropertyWorkspacePageProps) {
   const { propertyId } = await params;
-  const property = await getProperty(propertyId);
-  const activityEvents = await getPropertyActivity(propertyId);
-  const attachments = await getPropertyAttachments(propertyId);
-  const tenants = await getTenants(propertyId);
-  const agreements = await getAgreements(propertyId);
-  const rentRecords = await getRentRecords(propertyId);
-  const expenseCategories = await getExpenseCategories();
-  const expenses = await getExpenses(propertyId);
-  const vendors = await getVendors();
-  const maintenanceIssues = await getMaintenanceIssues(propertyId);
-  const deposits = await getDeposits(propertyId);
-  const propertyAccess = await getPropertyAccess(propertyId);
-  const invitations = await getInvitations(propertyId);
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (!userData.user) {
+    redirect("/login");
+  }
+
+  const [
+    property,
+    activityEvents,
+    attachments,
+    tenants,
+    agreements,
+    rentRecords,
+    expenseCategories,
+    expenses,
+    vendors,
+    maintenanceIssues,
+    deposits,
+    propertyAccess,
+    invitations,
+  ] = await Promise.all([
+    getProperty(supabase, propertyId),
+    getPropertyActivity(supabase, propertyId),
+    getPropertyAttachments(supabase, propertyId),
+    getTenants(supabase, propertyId),
+    getAgreements(supabase, propertyId),
+    getRentRecords(supabase, propertyId),
+    getExpenseCategories(supabase),
+    getExpenses(supabase, propertyId),
+    getVendors(supabase),
+    getMaintenanceIssues(supabase, propertyId),
+    getDeposits(supabase, propertyId),
+    getPropertyAccess(supabase, propertyId),
+    getInvitations(supabase, propertyId),
+  ]);
   const isVacant = property.status === "vacant";
 
   return (
