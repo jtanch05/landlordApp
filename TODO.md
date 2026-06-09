@@ -101,13 +101,13 @@ Current source files:
 
 ## Phase 8: Sharing And Access
 
-- [ ] Step 8.1: Build Host invitation flow by email.
-- [ ] Step 8.2: Implement 14-day invitation expiry.
-- [ ] Step 8.3: Activate Co-owner access after invited email signs in.
-- [ ] Step 8.4: Implement Host-managed `can_edit`.
-- [ ] Step 8.5: Implement access revocation while preserving audit logs.
-- [ ] Step 8.6: Implement tenant contact visibility setting.
-- [ ] Step 8.7: Implement private attachment visibility for Host-only files.
+- [x] Step 8.1: Build Host invitation flow by email.
+- [x] Step 8.2: Implement 14-day invitation expiry.
+- [x] Step 8.3: Activate Co-owner access after invited email signs in.
+- [x] Step 8.4: Implement Host-managed `can_edit`.
+- [x] Step 8.5: Implement access revocation while preserving audit logs.
+- [x] Step 8.6: Implement tenant contact visibility setting.
+- [x] Step 8.7: Implement private attachment visibility for Host-only files.
 
 ## Deferred Scope
 

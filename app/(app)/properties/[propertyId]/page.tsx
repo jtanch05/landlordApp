@@ -15,6 +15,11 @@ import {
   createRecurringExpenseAction,
 } from "@/features/expenses/actions";
 import { createMaintenanceIssueAction } from "@/features/maintenance/actions";
+import {
+  inviteCoOwnerAction,
+  revokePropertyAccessAction,
+  updatePropertyAccessAction,
+} from "@/features/sharing/actions";
 import { createTenantAction } from "@/features/tenants/actions";
 import { createClient } from "@/lib/supabase/server";
 import { formatMyr } from "@/lib/utils/currency";
@@ -113,6 +118,22 @@ type DepositSummary = {
   id: string;
   label: string;
   refund_date: string | null;
+  status: string;
+};
+
+type PropertyAccessSummary = {
+  can_edit: boolean;
+  can_view_tenant_contact: boolean;
+  created_at: string;
+  id: string;
+  user_id: string;
+};
+
+type InvitationSummary = {
+  can_edit: boolean;
+  email: string;
+  expires_at: string;
+  id: string;
   status: string;
 };
 
@@ -321,6 +342,39 @@ async function getDeposits(propertyId: string) {
   return data as DepositSummary[];
 }
 
+async function getPropertyAccess(propertyId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("property_access")
+    .select("id,user_id,can_edit,can_view_tenant_contact,created_at")
+    .eq("property_id", propertyId)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load property access: ${error.message}`);
+  }
+
+  return data as PropertyAccessSummary[];
+}
+
+async function getInvitations(propertyId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("id,email,can_edit,status,expires_at")
+    .eq("property_id", propertyId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load invitations: ${error.message}`);
+  }
+
+  return data as InvitationSummary[];
+}
+
 export default async function PropertyWorkspacePage({
   params,
 }: PropertyWorkspacePageProps) {
@@ -336,6 +390,8 @@ export default async function PropertyWorkspacePage({
   const vendors = await getVendors();
   const maintenanceIssues = await getMaintenanceIssues(propertyId);
   const deposits = await getDeposits(propertyId);
+  const propertyAccess = await getPropertyAccess(propertyId);
+  const invitations = await getInvitations(propertyId);
   const isVacant = property.status === "vacant";
 
   return (
@@ -527,6 +583,127 @@ export default async function PropertyWorkspacePage({
               </button>
             </div>
           </form>
+
+          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
+            <h2 className="text-lg font-semibold text-[#163300]">Sharing</h2>
+            <form
+              action={inviteCoOwnerAction}
+              className="mt-5 grid gap-3 rounded-[6px] border border-[#d8decf] bg-[#f7f7f2] p-4 sm:grid-cols-[1fr_auto_auto_auto]"
+            >
+              <input name="propertyId" type="hidden" value={property.id} />
+              <label className="block text-sm font-medium text-[#2f4a34]">
+                Co-owner email
+                <input
+                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                  name="email"
+                  required
+                  type="email"
+                />
+              </label>
+              <label className="mt-8 flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
+                <input name="canEdit" type="checkbox" />
+                Can edit
+              </label>
+              <label className="mt-8 flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
+                <input name="canViewTenantContact" type="checkbox" />
+                Tenant contact
+              </label>
+              <button
+                className="mt-7 rounded-[6px] bg-[#9fe870] px-4 py-2 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
+                type="submit"
+              >
+                Invite
+              </button>
+            </form>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold text-[#163300]">
+                  Active access
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {propertyAccess.length > 0 ? (
+                    propertyAccess.map((access) => (
+                      <form
+                        action={updatePropertyAccessAction}
+                        className="rounded-[6px] border border-[#d8decf] px-3 py-3"
+                        key={access.id}
+                      >
+                        <input name="propertyId" type="hidden" value={property.id} />
+                        <input name="accessId" type="hidden" value={access.id} />
+                        <p className="text-sm font-semibold text-[#2f4a34]">
+                          {access.user_id}
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                          <label className="flex items-center gap-2 text-xs font-medium text-[#4d6650]">
+                            <input
+                              defaultChecked={access.can_edit}
+                              name="canEdit"
+                              type="checkbox"
+                            />
+                            Can edit
+                          </label>
+                          <label className="flex items-center gap-2 text-xs font-medium text-[#4d6650]">
+                            <input
+                              defaultChecked={access.can_view_tenant_contact}
+                              name="canViewTenantContact"
+                              type="checkbox"
+                            />
+                            Tenant contact
+                          </label>
+                          <button
+                            className="rounded-[6px] bg-[#9fe870] px-3 py-2 text-xs font-semibold text-[#163300]"
+                            type="submit"
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="rounded-[6px] border border-[#9c1c1c] px-3 py-2 text-xs font-semibold text-[#9c1c1c]"
+                            formAction={revokePropertyAccessAction}
+                            type="submit"
+                          >
+                            Revoke
+                          </button>
+                        </div>
+                      </form>
+                    ))
+                  ) : (
+                    <p className="text-sm leading-6 text-[#4d6650]">
+                      No active Co-owner access.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-[#163300]">
+                  Invitations
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {invitations.length > 0 ? (
+                    invitations.map((invitation) => (
+                      <div
+                        className="rounded-[6px] border border-[#d8decf] px-3 py-3"
+                        key={invitation.id}
+                      >
+                        <p className="text-sm font-semibold text-[#2f4a34]">
+                          {invitation.email}
+                        </p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
+                          {invitation.status} · expires{" "}
+                          {new Date(invitation.expires_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm leading-6 text-[#4d6650]">
+                      No invitations yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
 
           <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
             <h2 className="text-lg font-semibold text-[#163300]">Tenants</h2>

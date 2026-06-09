@@ -44,11 +44,18 @@ export async function ensureUserProfileAndDefaultPortfolio(
   }
 
   const user = userData.user;
+  const userEmail = user.email;
+
+  if (!userEmail) {
+    throw new Error("Signed-in user does not have an email address.");
+  }
+
+  const email = userEmail.toLowerCase();
 
   const { error: profileError } = await supabase.from("profiles").upsert({
     avatar_url: getAvatarUrl(user),
     display_name: getDisplayName(user),
-    email: user.email,
+    email,
     id: user.id,
   });
 
@@ -66,6 +73,8 @@ export async function ensureUserProfileAndDefaultPortfolio(
   if (membershipError) {
     throw new Error(`Failed to check portfolio membership: ${membershipError.message}`);
   }
+
+  await activatePendingInvitations(supabase, user.id, email);
 
   if (existingMembership?.portfolio_id) {
     return {
@@ -105,4 +114,52 @@ export async function ensureUserProfileAndDefaultPortfolio(
     portfolioId,
     profileId: user.id,
   };
+}
+
+async function activatePendingInvitations(
+  supabase: SupabaseClient,
+  userId: string,
+  email: string,
+) {
+  const { data: invitations, error } = await supabase
+    .from("invitations")
+    .select("id,property_id,can_edit,can_view_tenant_contact,invited_by")
+    .eq("email", email)
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString());
+
+  if (error) {
+    throw new Error(`Failed to load pending invitations: ${error.message}`);
+  }
+
+  if (!invitations?.length) {
+    return;
+  }
+
+  for (const invitation of invitations) {
+    const { error: accessError } = await supabase.from("property_access").insert({
+      can_edit: invitation.can_edit,
+      can_view_tenant_contact: invitation.can_view_tenant_contact,
+      granted_by: invitation.invited_by,
+      property_id: invitation.property_id,
+      user_id: userId,
+    });
+
+    if (accessError && accessError.code !== "23505") {
+      throw new Error(`Failed to activate invitation: ${accessError.message}`);
+    }
+
+    const { error: invitationError } = await supabase
+      .from("invitations")
+      .update({
+        accepted_at: new Date().toISOString(),
+        accepted_by: userId,
+        status: "accepted",
+      })
+      .eq("id", invitation.id);
+
+    if (invitationError) {
+      throw new Error(`Failed to mark invitation accepted: ${invitationError.message}`);
+    }
+  }
 }
