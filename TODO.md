@@ -77,15 +77,15 @@ Current source files:
 
 ## Phase 6: Expenses, Maintenance, Vendors, And Deposits
 
-- [ ] Step 6.1: Build portfolio-level expense category management.
-- [ ] Step 6.2: Build expense records inside property workspace.
-- [ ] Step 6.3: Implement paid/unpaid expense status.
-- [ ] Step 6.4: Implement simple recurring expense prompts.
-- [ ] Step 6.5: Build portfolio-level vendor contacts.
-- [ ] Step 6.6: Build maintenance issue records.
-- [ ] Step 6.7: Implement linked maintenance expense creation/update.
-- [ ] Step 6.8: Build deposits tied to agreements.
-- [ ] Step 6.9: Implement simple held/refunded deposit status.
+- [x] Step 6.1: Build portfolio-level expense category management.
+- [x] Step 6.2: Build expense records inside property workspace.
+- [x] Step 6.3: Implement paid/unpaid expense status.
+- [x] Step 6.4: Implement simple recurring expense prompts.
+- [x] Step 6.5: Build portfolio-level vendor contacts.
+- [x] Step 6.6: Build maintenance issue records.
+- [x] Step 6.7: Implement linked maintenance expense creation/update.
+- [x] Step 6.8: Build deposits tied to agreements.
+- [x] Step 6.9: Implement simple held/refunded deposit status.
 
 ## Phase 7: Reminders, Activity, Dashboard, And Reports
 

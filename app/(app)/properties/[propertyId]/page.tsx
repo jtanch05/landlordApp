@@ -9,6 +9,12 @@ import {
   createManualRentRecordAction,
   updateRentRecordPaymentAction,
 } from "@/features/agreements/actions";
+import { createDepositAction, updateDepositStatusAction } from "@/features/deposits/actions";
+import {
+  createExpenseAction,
+  createRecurringExpenseAction,
+} from "@/features/expenses/actions";
+import { createMaintenanceIssueAction } from "@/features/maintenance/actions";
 import { createTenantAction } from "@/features/tenants/actions";
 import { createClient } from "@/lib/supabase/server";
 import { formatMyr } from "@/lib/utils/currency";
@@ -71,6 +77,42 @@ type RentRecordSummary = {
   due_date: string;
   id: string;
   month: string;
+  status: string;
+};
+
+type ExpenseCategorySummary = {
+  default_tax_deductible: boolean;
+  id: string;
+  name: string;
+};
+
+type ExpenseSummary = {
+  amount_cents: number;
+  description: string;
+  expense_date: string;
+  id: string;
+  status: string;
+};
+
+type VendorSummary = {
+  id: string;
+  name: string;
+  service_type: string | null;
+};
+
+type MaintenanceIssueSummary = {
+  cost_cents: number | null;
+  description: string;
+  id: string;
+  reported_date: string;
+  status: string;
+};
+
+type DepositSummary = {
+  amount_cents: number;
+  id: string;
+  label: string;
+  refund_date: string | null;
   status: string;
 };
 
@@ -194,6 +236,91 @@ async function getRentRecords(propertyId: string) {
   return data as RentRecordSummary[];
 }
 
+async function getExpenseCategories() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("expense_categories")
+    .select("id,name,default_tax_deductible")
+    .is("archived_at", null)
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load expense categories: ${error.message}`);
+  }
+
+  return data as ExpenseCategorySummary[];
+}
+
+async function getExpenses(propertyId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("id,description,amount_cents,status,expense_date")
+    .eq("property_id", propertyId)
+    .is("archived_at", null)
+    .order("expense_date", { ascending: false })
+    .limit(12);
+
+  if (error) {
+    throw new Error(`Failed to load expenses: ${error.message}`);
+  }
+
+  return data as ExpenseSummary[];
+}
+
+async function getVendors() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("vendors")
+    .select("id,name,service_type")
+    .is("archived_at", null)
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load vendors: ${error.message}`);
+  }
+
+  return data as VendorSummary[];
+}
+
+async function getMaintenanceIssues(propertyId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("maintenance_issues")
+    .select("id,description,reported_date,status,cost_cents")
+    .eq("property_id", propertyId)
+    .is("archived_at", null)
+    .order("reported_date", { ascending: false })
+    .limit(12);
+
+  if (error) {
+    throw new Error(`Failed to load maintenance issues: ${error.message}`);
+  }
+
+  return data as MaintenanceIssueSummary[];
+}
+
+async function getDeposits(propertyId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("deposits")
+    .select("id,label,amount_cents,status,refund_date")
+    .eq("property_id", propertyId)
+    .is("archived_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load deposits: ${error.message}`);
+  }
+
+  return data as DepositSummary[];
+}
+
 export default async function PropertyWorkspacePage({
   params,
 }: PropertyWorkspacePageProps) {
@@ -204,6 +331,11 @@ export default async function PropertyWorkspacePage({
   const tenants = await getTenants(propertyId);
   const agreements = await getAgreements(propertyId);
   const rentRecords = await getRentRecords(propertyId);
+  const expenseCategories = await getExpenseCategories();
+  const expenses = await getExpenses(propertyId);
+  const vendors = await getVendors();
+  const maintenanceIssues = await getMaintenanceIssues(propertyId);
+  const deposits = await getDeposits(propertyId);
   const isVacant = property.status === "vacant";
 
   return (
@@ -458,6 +590,74 @@ export default async function PropertyWorkspacePage({
                 </button>
               </form>
             </div>
+
+            <form
+              action={createRecurringExpenseAction}
+              className="mt-6 grid gap-3 rounded-[6px] border border-[#d8decf] bg-[#f7f7f2] p-4 sm:grid-cols-5"
+            >
+              <input name="propertyId" type="hidden" value={property.id} />
+              <label className="block text-sm font-medium text-[#2f4a34] sm:col-span-2">
+                Recurring description
+                <input
+                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                  name="description"
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-[#2f4a34]">
+                Category
+                <select
+                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                  name="categoryId"
+                  required
+                >
+                  <option value="">Select</option>
+                  {expenseCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-[#2f4a34]">
+                Amount
+                <input
+                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                  min="0"
+                  name="amount"
+                  required
+                  step="0.01"
+                  type="number"
+                />
+              </label>
+              <label className="block text-sm font-medium text-[#2f4a34]">
+                Day
+                <input
+                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                  defaultValue="1"
+                  max="31"
+                  min="1"
+                  name="dayOfMonth"
+                  required
+                  type="number"
+                />
+              </label>
+              <label className="block text-sm font-medium text-[#2f4a34]">
+                Starts
+                <input
+                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                  name="startsOn"
+                  required
+                  type="date"
+                />
+              </label>
+              <button
+                className="rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d] sm:col-span-4"
+                type="submit"
+              >
+                Save recurring prompt
+              </button>
+            </form>
           </section>
 
           <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
@@ -688,6 +888,317 @@ export default async function PropertyWorkspacePage({
                   Rent records will appear after an agreement is created.
                 </p>
               ) : null}
+            </div>
+          </section>
+
+          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
+            <h2 className="text-lg font-semibold text-[#163300]">Expenses</h2>
+            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
+              <div className="space-y-3">
+                {expenses.length > 0 ? (
+                  expenses.map((expense) => (
+                    <div
+                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
+                      key={expense.id}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-[#2f4a34]">
+                            {expense.description}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
+                            {expense.expense_date}
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold text-[#163300]">
+                          {formatMyr(expense.amount_cents)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs capitalize text-[#4d6650]">
+                        {expense.status}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm leading-6 text-[#4d6650]">
+                    No expenses recorded yet.
+                  </p>
+                )}
+              </div>
+
+              <form action={createExpenseAction} className="space-y-3">
+                <input name="propertyId" type="hidden" value={property.id} />
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Description
+                  <input
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="description"
+                    required
+                  />
+                </label>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Category
+                  <select
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="categoryId"
+                    required
+                  >
+                    <option value="">Select category</option>
+                    {expenseCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-sm font-medium text-[#2f4a34]">
+                    Amount
+                    <input
+                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                      min="0"
+                      name="amount"
+                      required
+                      step="0.01"
+                      type="number"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium text-[#2f4a34]">
+                    Date
+                    <input
+                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                      name="expenseDate"
+                      required
+                      type="date"
+                    />
+                  </label>
+                </div>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Status
+                  <select
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="status"
+                    defaultValue="unpaid"
+                  >
+                    <option value="unpaid">Unpaid</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
+                  <input name="taxDeductible" type="checkbox" />
+                  Tax deductible
+                </label>
+                <button
+                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
+                  type="submit"
+                >
+                  Add expense
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
+            <h2 className="text-lg font-semibold text-[#163300]">
+              Maintenance
+            </h2>
+            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
+              <div className="space-y-3">
+                {maintenanceIssues.length > 0 ? (
+                  maintenanceIssues.map((issue) => (
+                    <div
+                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
+                      key={issue.id}
+                    >
+                      <p className="text-sm font-semibold text-[#2f4a34]">
+                        {issue.description}
+                      </p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
+                        {issue.reported_date} · {issue.status}
+                      </p>
+                      <p className="mt-2 text-sm text-[#4d6650]">
+                        {issue.cost_cents ? formatMyr(issue.cost_cents) : "No cost recorded"}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm leading-6 text-[#4d6650]">
+                    No maintenance issues recorded yet.
+                  </p>
+                )}
+              </div>
+
+              <form action={createMaintenanceIssueAction} className="space-y-3">
+                <input name="propertyId" type="hidden" value={property.id} />
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Description
+                  <textarea
+                    className="mt-2 min-h-20 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="description"
+                    required
+                  />
+                </label>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Issue type
+                  <input
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="issueType"
+                    placeholder="Plumbing, electrical"
+                  />
+                </label>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Vendor
+                  <select
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="vendorId"
+                  >
+                    <option value="">No vendor</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Expense category for cost
+                  <select
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="expenseCategoryId"
+                  >
+                    <option value="">No linked expense</option>
+                    {expenseCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-sm font-medium text-[#2f4a34]">
+                    Reported
+                    <input
+                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                      name="reportedDate"
+                      required
+                      type="date"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium text-[#2f4a34]">
+                    Cost
+                    <input
+                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                      min="0"
+                      name="cost"
+                      step="0.01"
+                      type="number"
+                    />
+                  </label>
+                </div>
+                <button
+                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
+                  type="submit"
+                >
+                  Add issue
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
+            <h2 className="text-lg font-semibold text-[#163300]">Deposits</h2>
+            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
+              <div className="space-y-3">
+                {deposits.length > 0 ? (
+                  deposits.map((deposit) => (
+                    <form
+                      action={updateDepositStatusAction}
+                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
+                      key={deposit.id}
+                    >
+                      <input name="propertyId" type="hidden" value={property.id} />
+                      <input name="depositId" type="hidden" value={deposit.id} />
+                      <p className="text-sm font-semibold text-[#2f4a34]">
+                        {deposit.label}
+                      </p>
+                      <p className="mt-1 text-sm text-[#4d6650]">
+                        {formatMyr(deposit.amount_cents)}
+                      </p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                        <select
+                          className="rounded-[6px] border border-[#cbd5c1] bg-white px-2 py-2 text-xs text-[#163300]"
+                          defaultValue={deposit.status}
+                          name="status"
+                        >
+                          <option value="held">Held</option>
+                          <option value="refunded">Refunded</option>
+                        </select>
+                        <input
+                          className="rounded-[6px] border border-[#cbd5c1] px-2 py-2 text-xs text-[#163300]"
+                          defaultValue={deposit.refund_date ?? ""}
+                          name="refundDate"
+                          type="date"
+                        />
+                        <button
+                          className="rounded-[6px] bg-[#9fe870] px-3 py-2 text-xs font-semibold text-[#163300]"
+                          type="submit"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </form>
+                  ))
+                ) : (
+                  <p className="text-sm leading-6 text-[#4d6650]">
+                    No deposits recorded yet.
+                  </p>
+                )}
+              </div>
+
+              <form action={createDepositAction} className="space-y-3">
+                <input name="propertyId" type="hidden" value={property.id} />
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Agreement
+                  <select
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="agreementId"
+                    required
+                  >
+                    <option value="">Select agreement</option>
+                    {agreements.map((agreement) => (
+                      <option key={agreement.id} value={agreement.id}>
+                        {agreement.start_date} to {agreement.end_date}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Label
+                  <input
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    name="label"
+                    placeholder="Security deposit"
+                    required
+                  />
+                </label>
+                <label className="block text-sm font-medium text-[#2f4a34]">
+                  Amount
+                  <input
+                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
+                    min="0"
+                    name="amount"
+                    required
+                    step="0.01"
+                    type="number"
+                  />
+                </label>
+                <button
+                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
+                  type="submit"
+                >
+                  Add deposit
+                </button>
+              </form>
             </div>
           </section>
 
