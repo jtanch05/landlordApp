@@ -1,11 +1,11 @@
 # PropTrack UI Design Direction
 
-PropTrack should use a Wise-inspired product UI direction without copying Wise branding. The goal is a calm, high-trust, financial operations interface for landlords.
+PropTrack should use a Claude-inspired warm operational UI direction without copying Claude branding. The goal is a calm, high-trust, financial operations interface for landlords with soft floating work surfaces and dense, practical content.
 
 Reference inspiration:
 
-- Wise Platform uses a more neutral palette with restrained text and subtle secondary colour pops.
-- Wise product colour guidance uses white as the dominant screen colour, warm neutral surfaces, near-black content, forest green for interaction, and bright green sparingly as an accent.
+- Claude-style warm neutrals: soft canvas, white elevated surfaces, near-black content, and rust/copper primary actions.
+- The app reference uses a floating icon rail, rounded work surfaces, compact cards, and route-specific layouts rather than one rigid shell for every page.
 
 ## Design Personality
 
@@ -22,39 +22,41 @@ Avoid:
 - Decorative gradients, orbs, or bokeh backgrounds.
 - Overly colorful dashboards.
 - Dark finance-app styling for v1.
-- Card-heavy pages where every section becomes a floating panel.
+- Marketing-style empty space that makes operational screens slow to scan.
+- Copying deferred features from visual references, such as Google Calendar sync, theme switching, or destructive clear-all-data controls.
 
 ## Colour System
 
-Use a Wise-inspired green and neutral system adapted for PropTrack.
+Use a Claude-inspired warm neutral system adapted for PropTrack.
 
 ### Core Tokens
 
 ```text
---pt-bg-screen: #ffffff;
---pt-bg-neutral: rgba(22, 51, 0, 0.08);
+--pt-bg-screen: #f4f3ee;
+--pt-bg-neutral: #f4f3ee;
 --pt-bg-elevated: #ffffff;
 
---pt-content-primary: #0e0f0c;
---pt-content-secondary: #454745;
---pt-content-tertiary: #6a6c6a;
+--pt-content-primary: #1f1f1d;
+--pt-content-secondary: #4d4a44;
+--pt-content-tertiary: #7a756b;
 
---pt-border-neutral: rgba(14, 15, 12, 0.12);
+--pt-border-neutral: rgba(177, 173, 161, 0.45);
+--pt-muted: #b1ada1;
 
---pt-green-forest: #163300;
---pt-green-bright: #9fe870;
+--pt-primary: #c15f3c;
+--pt-primary-hover: #ad5334;
 ```
 
 ### Semantic Tokens
 
 ```text
---pt-action-primary-bg: #9fe870;
---pt-action-primary-fg: #163300;
---pt-action-secondary-bg: rgba(22, 51, 0, 0.08);
---pt-action-secondary-fg: #163300;
+--pt-action-primary-bg: #c15f3c;
+--pt-action-primary-fg: #ffffff;
+--pt-action-secondary-bg: #ffffff;
+--pt-action-secondary-fg: #1f1f1d;
 
---pt-link: #163300;
---pt-focus-ring: #9fe870;
+--pt-link: #c15f3c;
+--pt-focus-ring: rgba(193, 95, 60, 0.35);
 
 --pt-status-paid-bg: #dff8d2;
 --pt-status-paid-fg: #163300;
@@ -71,8 +73,8 @@ Use a Wise-inspired green and neutral system adapted for PropTrack.
 - White should dominate app screens.
 - Warm neutral surfaces should separate areas without heavy borders.
 - Content greys should carry hierarchy.
-- Forest green should mark active navigation, links, and key controls.
-- Bright green should be used sparingly for primary actions and important highlights.
+- Rust/copper should mark primary actions, active accents, and key chart marks.
+- Green should be reserved for semantic paid/success states or explicit property-finance meaning, not primary brand action.
 - Secondary colours should stay contained in badges, icons, and small chart marks.
 
 ## Typography
@@ -103,12 +105,13 @@ Metadata: 12-13px
 
 ## Shape And Spacing
 
-Use restrained rounded corners.
+Use soft but restrained rounded corners.
 
 ```text
 Small controls: 6px radius
 Inputs: 8px radius
-Panels/cards: 8px radius
+Inner cards and table containers: 8-12px radius
+Floating shell surfaces: 16-20px radius
 Primary pill buttons: 999px radius only where appropriate
 ```
 
@@ -132,10 +135,17 @@ Top-level navigation:
 
 Authenticated app layout:
 
-- Desktop: left sidebar navigation with content area.
-- Mobile: top bar plus compact navigation/menu.
-- Maximum content width for normal pages: around 1280px.
+- Desktop: floating icon rail plus an adaptive workbench area.
+- Mobile: compact navigation plus a sheet for contextual lists and filters.
+- Maximum content width for normal pages: around 1440px when the route uses a full canvas.
 - Property workspace should use tabs for property-specific modules.
+- Do not force a middle panel on every route. Use route-specific layout:
+  - Dashboard: icon rail plus full-width dashboard canvas.
+  - Properties: icon rail, property list panel, and property workspace panel.
+  - Vendors: icon rail plus full content canvas with search and vendor cards.
+  - Reports: icon rail plus report selection and generation canvas.
+  - Activity: icon rail plus filterable activity canvas.
+  - Settings: icon rail plus centered settings sections.
 
 Property workspace tabs:
 
@@ -155,15 +165,15 @@ Property workspace tabs:
 
 Primary action:
 
-- Bright green background.
-- Forest green text.
+- Rust/copper background.
+- White text.
 - Pill or 8px radius depending on context.
 - Used for one primary action per section.
 
 Secondary action:
 
 - Neutral background or bordered.
-- Forest green or primary content text.
+- Primary content text or rust/copper text when the action is directional.
 
 Danger action:
 
@@ -246,9 +256,10 @@ Dashboard visual rules:
 
 - Use a clean grid.
 - Keep charts compact.
-- Use green for positive/action states.
+- Use rust/copper for brand/action marks.
+- Use green for positive financial status only.
 - Use warm warning colours only for unpaid/overdue states.
-- Do not overuse bright green in charts.
+- Do not overuse the primary colour in charts.
 
 ## Property Workspace Design
 
@@ -333,7 +344,8 @@ Private to Host
 
 ## Implementation Notes
 
-- Tailwind can map these colours as custom theme tokens.
-- Prefer reusable UI primitives for buttons, inputs, badges, panels, tabs, and tables.
+- Use shadcn primitives as the component base, with PropTrack wrappers for app-specific styling consistency.
+- Configure shadcn/Tailwind CSS variables around the Claude-inspired palette.
+- Prefer reusable UI primitives for buttons, inputs, badges, panels, tabs, tables, dialogs, sheets, tooltips, avatars, dropdown menus, separators, scroll areas, and skeletons.
 - Use lucide icons when icon buttons are needed.
-- Avoid implementing a full design system before the first screens exist; build primitives as screens require them.
+- Keep v1 light-only. Theme switching is deferred unless product scope changes.
