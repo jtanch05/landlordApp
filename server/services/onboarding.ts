@@ -1,5 +1,7 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
+import { createAdminClient } from "@/lib/supabase/admin";
+
 type OnboardingResult = {
   portfolioId: string;
   profileId: string;
@@ -51,8 +53,9 @@ export async function ensureUserProfileAndDefaultPortfolio(
   }
 
   const email = userEmail.toLowerCase();
+  const adminSupabase = createAdminClient();
 
-  const { error: profileError } = await supabase.from("profiles").upsert({
+  const { error: profileError } = await adminSupabase.from("profiles").upsert({
     avatar_url: getAvatarUrl(user),
     display_name: getDisplayName(user),
     email,
@@ -63,7 +66,7 @@ export async function ensureUserProfileAndDefaultPortfolio(
     throw new Error(`Failed to prepare user profile: ${profileError.message}`);
   }
 
-  const { data: existingMembership, error: membershipError } = await supabase
+  const { data: existingMembership, error: membershipError } = await adminSupabase
     .from("portfolio_members")
     .select("portfolio_id")
     .eq("user_id", user.id)
@@ -74,7 +77,7 @@ export async function ensureUserProfileAndDefaultPortfolio(
     throw new Error(`Failed to check portfolio membership: ${membershipError.message}`);
   }
 
-  await activatePendingInvitations(supabase, user.id, email);
+  await activatePendingInvitations(adminSupabase, user.id, email);
 
   if (existingMembership?.portfolio_id) {
     return {
@@ -83,7 +86,7 @@ export async function ensureUserProfileAndDefaultPortfolio(
     };
   }
 
-  const { data: portfolio, error: portfolioError } = await supabase
+  const { data: portfolio, error: portfolioError } = await adminSupabase
     .from("portfolios")
     .insert({
       created_by: user.id,
@@ -98,7 +101,7 @@ export async function ensureUserProfileAndDefaultPortfolio(
 
   const portfolioId = portfolio.id as string;
 
-  const { error: hostMembershipError } = await supabase
+  const { error: hostMembershipError } = await adminSupabase
     .from("portfolio_members")
     .insert({
       portfolio_id: portfolioId,
