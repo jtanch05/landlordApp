@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -36,23 +38,24 @@ function readPropertyStatus(formData: FormData): PropertyStatus {
 export async function createPropertyAction(formData: FormData) {
   const supabase = await createClient();
   const onboarding = await ensureUserProfileAndDefaultPortfolio(supabase);
+  const propertyId = randomUUID();
+  const nickname = readRequiredText(formData, "nickname");
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("properties")
     .insert({
       address_line1: readOptionalText(formData, "addressLine1"),
       city: readOptionalText(formData, "city"),
       created_by: onboarding.profileId,
-      nickname: readRequiredText(formData, "nickname"),
+      id: propertyId,
+      nickname,
       notes: readOptionalText(formData, "notes"),
       portfolio_id: onboarding.portfolioId,
       postcode: readOptionalText(formData, "postcode"),
       state: readOptionalText(formData, "state"),
       status: readPropertyStatus(formData),
       type: readRequiredText(formData, "type"),
-    })
-    .select("id")
-    .single();
+    });
 
   if (error) {
     throw new Error(`Failed to create property: ${error.message}`);
@@ -61,14 +64,14 @@ export async function createPropertyAction(formData: FormData) {
   await recordAuditEvent(supabase, {
     action: "create",
     actorId: onboarding.profileId,
-    entityId: data.id as string,
+    entityId: propertyId,
     entityType: "property",
     portfolioId: onboarding.portfolioId,
-    propertyId: data.id as string,
-    summary: `Created property ${readRequiredText(formData, "nickname")}`,
+    propertyId,
+    summary: `Created property ${nickname}`,
   });
 
-  redirect(`/properties/${data.id}`);
+  redirect(`/properties/${propertyId}`);
 }
 
 export async function updatePropertyAction(formData: FormData) {
