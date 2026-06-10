@@ -2,15 +2,6 @@
 
 import type { ReactElement, ReactNode } from "react";
 import { Children, isValidElement, useMemo, useState } from "react";
-import {
-  Activity,
-  FileText,
-  Home,
-  ReceiptText,
-  UsersRound,
-  WalletCards,
-  Wrench,
-} from "lucide-react";
 
 import {
   propertyWorkspaceTabs,
@@ -34,18 +25,6 @@ function isTabPanelElement(child: ReactNode): child is TabPanelElement {
   );
 }
 
-const tabIcons = {
-  activity: Activity,
-  agreements: FileText,
-  deposits: WalletCards,
-  expenses: ReceiptText,
-  files: FileText,
-  maintenance: Wrench,
-  overview: Home,
-  rent: WalletCards,
-  tenants: UsersRound,
-};
-
 export function PropertyWorkspaceTabsClient({
   children,
   initialTab,
@@ -60,35 +39,35 @@ export function PropertyWorkspaceTabsClient({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <nav
-        aria-label="Property workspace modules"
-        className="flex h-12 shrink-0 items-center gap-5 overflow-x-auto border-b border-border px-6"
-        role="tablist"
-      >
-        {propertyWorkspaceTabs.map((tab) => {
-          const Icon = tabIcons[tab.id];
-          const isActive = tab.id === activeTab;
+      <div className="shrink-0 border-b border-border px-6 py-3">
+        <nav
+          aria-label="Property workspace modules"
+          className="flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted/65 p-1"
+          role="tablist"
+        >
+          {propertyWorkspaceTabs.map((tab) => {
+            const isActive = tab.id === activeTab;
 
-          return (
-            <button
-              aria-controls={`property-tab-${tab.id}`}
-              aria-selected={isActive}
-              className={cn(
-                "inline-flex h-12 shrink-0 items-center gap-2 border-b-2 border-transparent text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
-                isActive && "border-foreground text-foreground",
-              )}
-              id={`property-tab-trigger-${tab.id}`}
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              role="tab"
-              type="button"
-            >
-              <Icon className="size-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </nav>
+            return (
+              <button
+                aria-controls={`property-tab-${tab.id}`}
+                aria-selected={isActive}
+                className={cn(
+                  "inline-flex h-8 shrink-0 items-center justify-center rounded-md px-4 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
+                  isActive && "bg-card text-foreground shadow-sm",
+                )}
+                id={`property-tab-trigger-${tab.id}`}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                role="tab"
+                type="button"
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-6 lg:p-9">
         {activePanel ? (
