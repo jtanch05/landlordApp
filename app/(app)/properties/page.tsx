@@ -10,12 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  archivePropertyAction,
-  createPropertyAction,
-} from "@/features/properties/actions";
+import { archivePropertyAction } from "@/features/properties/actions";
+import { CreatePropertyDialog } from "@/features/properties/components/CreatePropertyDialog";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -65,11 +61,13 @@ export default async function PropertiesPage() {
               {properties.length} {properties.length === 1 ? "property" : "properties"}
             </p>
           </div>
-          <Button asChild size="icon" variant="ghost">
-            <a href="#new-property" aria-label="Add property">
-              <Plus className="size-5" />
-            </a>
-          </Button>
+          <CreatePropertyDialog
+            triggerAriaLabel="Add property"
+            triggerIcon={<Plus className="size-5" />}
+            triggerLabel={<span className="sr-only">Add property</span>}
+            triggerSize="icon"
+            triggerClassName="bg-transparent text-foreground hover:bg-muted"
+          />
         </CardHeader>
 
         <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
@@ -186,73 +184,6 @@ export default async function PropertiesPage() {
               ) : null}
             </div>
           </section>
-
-          <details
-            className="mt-5 rounded-xl border border-border bg-card p-4"
-            id="new-property"
-          >
-            <summary className="cursor-pointer text-sm font-semibold">
-              New property
-            </summary>
-            <form action={createPropertyAction} className="mt-5 grid gap-4 lg:grid-cols-2">
-              <label className="block text-sm font-medium">
-                Nickname
-                <Input
-                  className="mt-2"
-                  name="nickname"
-                  placeholder="Bukit Jalil Condo"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                Property type
-                <Input
-                  className="mt-2"
-                  name="type"
-                  placeholder="Condo, terrace, apartment"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                Status
-                <Select className="mt-2" name="status" defaultValue="vacant">
-                  <option value="vacant">Vacant</option>
-                  <option value="occupied">Occupied</option>
-                </Select>
-              </label>
-
-              <label className="block text-sm font-medium">
-                Address
-                <Input className="mt-2" name="addressLine1" placeholder="Street address" />
-              </label>
-
-              <label className="block text-sm font-medium">
-                City
-                <Input className="mt-2" name="city" placeholder="Kuala Lumpur" />
-              </label>
-
-              <label className="block text-sm font-medium">
-                Postcode
-                <Input className="mt-2" name="postcode" placeholder="57000" />
-              </label>
-
-              <label className="block text-sm font-medium">
-                State
-                <Input className="mt-2" name="state" placeholder="Selangor" />
-              </label>
-
-              <label className="block text-sm font-medium lg:col-span-2">
-                Notes
-                <Textarea className="mt-2" name="notes" placeholder="Optional setup notes" />
-              </label>
-
-              <Button className="w-fit" type="submit">
-                Create property
-              </Button>
-            </form>
-          </details>
         </CardContent>
       </Card>
     </div>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight, FileText, Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
@@ -54,11 +55,41 @@ export default async function ReportsPage() {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-7">
-      <header>
-        <h1 className="text-2xl font-semibold">Reports</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          PDF-ready portfolio and property statements.
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Reports</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            PDF-ready portfolio and property statements.
+          </p>
+        </div>
+        <FormDialog
+          title="New Report"
+          triggerIcon={<Plus className="size-4" />}
+          triggerLabel="New Report"
+        >
+          <div className="space-y-4">
+            <Select defaultValue="property-statement">
+              <option value="property-statement">Basic property statement</option>
+              <option value="rent-ledger">Rent ledger</option>
+              <option value="expenses">Expenses</option>
+            </Select>
+            <Select defaultValue="current-month">
+              <option value="current-month">Current month</option>
+              <option value="year-to-date">Year to date</option>
+              <option value="custom">Custom range</option>
+            </Select>
+            <div className="flex justify-end border-t border-border pt-5">
+              <Button type="button">
+                Generate PDF
+                <ArrowRight className="size-4" />
+              </Button>
+            </div>
+            <p className="text-xs leading-5 text-muted-foreground">
+              PDF rendering for rent ledger and expenses reports remains in the
+              implementation ledger.
+            </p>
+          </div>
+        </FormDialog>
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
@@ -76,33 +107,7 @@ export default async function ReportsPage() {
         ))}
       </section>
 
-      <section className="grid gap-7 xl:grid-cols-[420px_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Report setup</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Select defaultValue="property-statement">
-              <option value="property-statement">Basic property statement</option>
-              <option value="rent-ledger">Rent ledger</option>
-              <option value="expenses">Expenses</option>
-            </Select>
-            <Select defaultValue="current-month">
-              <option value="current-month">Current month</option>
-              <option value="year-to-date">Year to date</option>
-              <option value="custom">Custom range</option>
-            </Select>
-            <Button className="w-full" type="button">
-              Generate PDF
-              <ArrowRight className="size-4" />
-            </Button>
-            <p className="text-xs leading-5 text-muted-foreground">
-              PDF rendering for rent ledger and expenses reports remains in the
-              implementation ledger.
-            </p>
-          </CardContent>
-        </Card>
-
+      <section>
         <Card>
           <CardHeader>
             <div>

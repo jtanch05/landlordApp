@@ -6,6 +6,7 @@ import {
   Building2,
   FileText,
   Pencil,
+  Plus,
   ReceiptText,
   Search,
   Trash2,
@@ -22,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -49,6 +51,7 @@ import {
 import {
   normalizeWorkspaceTab,
 } from "@/features/properties/workspace-tabs";
+import { CreatePropertyDialog } from "@/features/properties/components/CreatePropertyDialog";
 import { PropertyWorkspaceTabsClient } from "@/features/properties/components/PropertyWorkspaceTabsClient";
 import {
   inviteCoOwnerAction,
@@ -435,11 +438,13 @@ export default async function PropertyWorkspacePage({
               {properties.length} {properties.length === 1 ? "property" : "properties"}
             </p>
           </div>
-          <Button asChild size="icon" variant="ghost">
-            <Link href="/properties#new-property" aria-label="Add property">
-              +
-            </Link>
-          </Button>
+          <CreatePropertyDialog
+            triggerAriaLabel="Add property"
+            triggerIcon={<Plus className="size-5" />}
+            triggerLabel={<span className="sr-only">Add property</span>}
+            triggerSize="icon"
+            triggerClassName="bg-transparent text-foreground hover:bg-muted"
+          />
         </CardHeader>
         <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
           <label className="relative block">
@@ -680,15 +685,24 @@ export default async function PropertyWorkspacePage({
                   title="No tenants yet"
                 />
               )}
-              <form action={createTenantAction} className="space-y-4">
-                <h2 className="text-lg font-semibold">New tenant</h2>
-                <input name="propertyId" type="hidden" value={property.id} />
-                <Input name="name" placeholder="Tenant name" required />
-                <Input name="phone" placeholder="Phone" />
-                <Input name="email" placeholder="Email" type="email" />
-                <Textarea name="notes" placeholder="Notes" />
-                <Button className="w-full" type="submit">Add Tenant</Button>
-              </form>
+              <div className="flex items-start justify-end">
+                <FormDialog
+                  title="Add Tenant"
+                  triggerIcon={<Plus className="size-4" />}
+                  triggerLabel="Add Tenant"
+                >
+                  <form action={createTenantAction} className="space-y-4">
+                    <input name="propertyId" type="hidden" value={property.id} />
+                    <Input name="name" placeholder="Tenant name" required />
+                    <Input name="phone" placeholder="Phone" />
+                    <Input name="email" placeholder="Email" type="email" />
+                    <Textarea name="notes" placeholder="Notes" />
+                    <div className="flex justify-end border-t border-border pt-5">
+                      <Button type="submit">Add Tenant</Button>
+                    </div>
+                  </form>
+                </FormDialog>
+              </div>
             </div>
 
             <div data-tab="agreements" className="grid gap-8 xl:grid-cols-[1fr_360px]">
@@ -708,30 +722,39 @@ export default async function PropertyWorkspacePage({
                   <EmptyPanel description="Create an agreement to generate the rent schedule." icon={<FileText className="size-12" />} title="No agreements yet" />
                 ) : null}
               </div>
-              <form action={createAgreementAction} className="space-y-4">
-                <h2 className="text-lg font-semibold">New agreement</h2>
-                <input name="propertyId" type="hidden" value={property.id} />
-                <Select name="tenantId" required>
-                  <option value="">Select tenant</option>
-                  {tenants.map((tenant) => (
-                    <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
-                  ))}
-                </Select>
-                <Select name="type" defaultValue="one_year">
-                  <option value="six_months">Six months</option>
-                  <option value="one_year">One year</option>
-                  <option value="two_years">Two years</option>
-                  <option value="three_years">Three years</option>
-                  <option value="custom">Custom</option>
-                </Select>
-                <Input name="startDate" required type="date" />
-                <Input name="customEndDate" type="date" />
-                <Input min="1" name="rentDueDay" placeholder="Rent due day" required type="number" />
-                <Input min="0" name="rentAmount" placeholder="Monthly rent (RM)" required step="0.01" type="number" />
-                <Input name="renewalOption" placeholder="Renewal option" />
-                <Textarea name="notes" placeholder="Notes" />
-                <Button className="w-full" type="submit">Create agreement</Button>
-              </form>
+              <div className="flex items-start justify-end">
+                <FormDialog
+                  title="Create Agreement"
+                  triggerIcon={<Plus className="size-4" />}
+                  triggerLabel="Create Agreement"
+                >
+                  <form action={createAgreementAction} className="grid gap-4 md:grid-cols-2">
+                    <input name="propertyId" type="hidden" value={property.id} />
+                    <Select name="tenantId" required>
+                      <option value="">Select tenant</option>
+                      {tenants.map((tenant) => (
+                        <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
+                      ))}
+                    </Select>
+                    <Select name="type" defaultValue="one_year">
+                      <option value="six_months">Six months</option>
+                      <option value="one_year">One year</option>
+                      <option value="two_years">Two years</option>
+                      <option value="three_years">Three years</option>
+                      <option value="custom">Custom</option>
+                    </Select>
+                    <Input name="startDate" required type="date" />
+                    <Input name="customEndDate" type="date" />
+                    <Input min="1" name="rentDueDay" placeholder="Rent due day" required type="number" />
+                    <Input min="0" name="rentAmount" placeholder="Monthly rent (RM)" required step="0.01" type="number" />
+                    <Input className="md:col-span-2" name="renewalOption" placeholder="Renewal option" />
+                    <Textarea className="md:col-span-2" name="notes" placeholder="Notes" />
+                    <div className="flex justify-end border-t border-border pt-5 md:col-span-2">
+                      <Button type="submit">Create agreement</Button>
+                    </div>
+                  </form>
+                </FormDialog>
+              </div>
             </div>
 
             <div data-tab="rent" className="space-y-6">
@@ -774,13 +797,21 @@ export default async function PropertyWorkspacePage({
                   ) : null}
                 </CardContent>
               </Card>
-              <form action={createManualRentRecordAction} className="grid gap-3 rounded-xl border border-border p-5 md:grid-cols-[1fr_1fr_1fr_auto]">
-                <input name="propertyId" type="hidden" value={property.id} />
-                <Input name="month" placeholder="2026-06" required />
-                <Input name="dueDate" required type="date" />
-                <Input min="0" name="amountDue" placeholder="Amount due" required step="0.01" type="number" />
-                <Button type="submit">Add manual rent</Button>
-              </form>
+              <FormDialog
+                title="Add Manual Rent"
+                triggerIcon={<Plus className="size-4" />}
+                triggerLabel="Add manual rent"
+              >
+                <form action={createManualRentRecordAction} className="grid gap-4 md:grid-cols-2">
+                  <input name="propertyId" type="hidden" value={property.id} />
+                  <Input name="month" placeholder="2026-06" required />
+                  <Input name="dueDate" required type="date" />
+                  <Input min="0" name="amountDue" placeholder="Amount due" required step="0.01" type="number" />
+                  <div className="flex justify-end border-t border-border pt-5 md:col-span-2">
+                    <Button type="submit">Add manual rent</Button>
+                  </div>
+                </form>
+              </FormDialog>
             </div>
 
             <div data-tab="expenses" className="grid gap-8 xl:grid-cols-[1fr_340px]">
@@ -803,25 +834,34 @@ export default async function PropertyWorkspacePage({
                   <EmptyPanel description="Track property costs and tax-deductible expenses here." icon={<ReceiptText className="size-12" />} title="No expenses recorded yet" />
                 ) : null}
               </div>
-              <form action={createExpenseAction} className="space-y-4">
-                <h2 className="text-lg font-semibold">Add expense</h2>
-                <input name="propertyId" type="hidden" value={property.id} />
-                <Input name="description" placeholder="Description" required />
-                <Select name="categoryId" required>
-                  <option value="">Select category</option>
-                  {expenseCategories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </Select>
-                <Input min="0" name="amount" placeholder="Amount" required step="0.01" type="number" />
-                <Input name="expenseDate" required type="date" />
-                <Select name="status" defaultValue="unpaid">
-                  <option value="unpaid">Unpaid</option>
-                  <option value="paid">Paid</option>
-                </Select>
-                <label className="flex items-center gap-2 text-sm"><input name="taxDeductible" type="checkbox" /> Tax deductible</label>
-                <Button className="w-full" type="submit">Add expense</Button>
-              </form>
+              <div className="flex items-start justify-end">
+                <FormDialog
+                  title="Add Expense"
+                  triggerIcon={<Plus className="size-4" />}
+                  triggerLabel="Add Expense"
+                >
+                  <form action={createExpenseAction} className="grid gap-4 md:grid-cols-2">
+                    <input name="propertyId" type="hidden" value={property.id} />
+                    <Input className="md:col-span-2" name="description" placeholder="Description" required />
+                    <Select name="categoryId" required>
+                      <option value="">Select category</option>
+                      {expenseCategories.map((category) => (
+                        <option key={category.id} value={category.id}>{category.name}</option>
+                      ))}
+                    </Select>
+                    <Input min="0" name="amount" placeholder="Amount" required step="0.01" type="number" />
+                    <Input name="expenseDate" required type="date" />
+                    <Select name="status" defaultValue="unpaid">
+                      <option value="unpaid">Unpaid</option>
+                      <option value="paid">Paid</option>
+                    </Select>
+                    <label className="flex items-center gap-2 text-sm md:col-span-2"><input name="taxDeductible" type="checkbox" /> Tax deductible</label>
+                    <div className="flex justify-end border-t border-border pt-5 md:col-span-2">
+                      <Button type="submit">Add expense</Button>
+                    </div>
+                  </form>
+                </FormDialog>
+              </div>
             </div>
 
             <div data-tab="maintenance" className="grid gap-8 xl:grid-cols-[1fr_340px]">
@@ -844,27 +884,36 @@ export default async function PropertyWorkspacePage({
                   <EmptyPanel description="Track repairs and service items for this property." icon={<Wrench className="size-12" />} title="No maintenance issues yet" />
                 ) : null}
               </div>
-              <form action={createMaintenanceIssueAction} className="space-y-4">
-                <h2 className="text-lg font-semibold">Add issue</h2>
-                <input name="propertyId" type="hidden" value={property.id} />
-                <Textarea name="description" placeholder="Description" required />
-                <Input name="issueType" placeholder="Issue type" />
-                <Select name="vendorId">
-                  <option value="">No vendor</option>
-                  {vendors.map((vendor) => (
-                    <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
-                  ))}
-                </Select>
-                <Select name="expenseCategoryId">
-                  <option value="">No linked expense</option>
-                  {expenseCategories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </Select>
-                <Input name="reportedDate" required type="date" />
-                <Input min="0" name="cost" placeholder="Cost" step="0.01" type="number" />
-                <Button className="w-full" type="submit">Add issue</Button>
-              </form>
+              <div className="flex items-start justify-end">
+                <FormDialog
+                  title="Add Maintenance Issue"
+                  triggerIcon={<Plus className="size-4" />}
+                  triggerLabel="Add Issue"
+                >
+                  <form action={createMaintenanceIssueAction} className="grid gap-4 md:grid-cols-2">
+                    <input name="propertyId" type="hidden" value={property.id} />
+                    <Textarea className="md:col-span-2" name="description" placeholder="Description" required />
+                    <Input name="issueType" placeholder="Issue type" />
+                    <Select name="vendorId">
+                      <option value="">No vendor</option>
+                      {vendors.map((vendor) => (
+                        <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                      ))}
+                    </Select>
+                    <Select name="expenseCategoryId">
+                      <option value="">No linked expense</option>
+                      {expenseCategories.map((category) => (
+                        <option key={category.id} value={category.id}>{category.name}</option>
+                      ))}
+                    </Select>
+                    <Input name="reportedDate" required type="date" />
+                    <Input min="0" name="cost" placeholder="Cost" step="0.01" type="number" />
+                    <div className="flex justify-end border-t border-border pt-5 md:col-span-2">
+                      <Button type="submit">Add issue</Button>
+                    </div>
+                  </form>
+                </FormDialog>
+              </div>
             </div>
 
             <div data-tab="deposits" className="grid gap-8 xl:grid-cols-[1fr_340px]">
@@ -894,19 +943,28 @@ export default async function PropertyWorkspacePage({
                   <EmptyPanel description="Deposits tied to agreements will appear here." icon={<WalletCards className="size-12" />} title="No deposits recorded yet" />
                 ) : null}
               </div>
-              <form action={createDepositAction} className="space-y-4">
-                <h2 className="text-lg font-semibold">Add deposit</h2>
-                <input name="propertyId" type="hidden" value={property.id} />
-                <Select name="agreementId" required>
-                  <option value="">Select agreement</option>
-                  {agreements.map((agreement) => (
-                    <option key={agreement.id} value={agreement.id}>{agreement.start_date} to {agreement.end_date}</option>
-                  ))}
-                </Select>
-                <Input name="label" placeholder="Security deposit" required />
-                <Input min="0" name="amount" placeholder="Amount" required step="0.01" type="number" />
-                <Button className="w-full" type="submit">Add deposit</Button>
-              </form>
+              <div className="flex items-start justify-end">
+                <FormDialog
+                  title="Add Deposit"
+                  triggerIcon={<Plus className="size-4" />}
+                  triggerLabel="Add Deposit"
+                >
+                  <form action={createDepositAction} className="space-y-4">
+                    <input name="propertyId" type="hidden" value={property.id} />
+                    <Select name="agreementId" required>
+                      <option value="">Select agreement</option>
+                      {agreements.map((agreement) => (
+                        <option key={agreement.id} value={agreement.id}>{agreement.start_date} to {agreement.end_date}</option>
+                      ))}
+                    </Select>
+                    <Input name="label" placeholder="Security deposit" required />
+                    <Input min="0" name="amount" placeholder="Amount" required step="0.01" type="number" />
+                    <div className="flex justify-end border-t border-border pt-5">
+                      <Button type="submit">Add deposit</Button>
+                    </div>
+                  </form>
+                </FormDialog>
+              </div>
             </div>
 
             <div data-tab="files" className="space-y-3">

@@ -14,6 +14,7 @@ import {
   dismissReminderAction,
   reconcileRentRemindersAction,
 } from "@/features/reminders/actions";
+import { CreatePropertyDialog } from "@/features/properties/components/CreatePropertyDialog";
 import { createClient } from "@/lib/supabase/server";
 import { formatMyr } from "@/lib/utils/currency";
 
@@ -90,12 +91,11 @@ export default async function DashboardPage() {
             Overview of your properties
           </p>
         </div>
-        <Button asChild className="w-fit">
-          <Link className="inline-flex items-center gap-2" href="/properties">
-            <Plus className="size-4" />
-            Add Property
-          </Link>
-        </Button>
+        <CreatePropertyDialog
+          triggerClassName="w-fit"
+          triggerIcon={<Plus className="size-4" />}
+          triggerLabel="Add Property"
+        />
       </header>
 
       <Card className="overflow-hidden p-0">
