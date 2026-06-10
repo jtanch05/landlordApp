@@ -12,7 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { createPropertyAction } from "@/features/properties/actions";
+import {
+  archivePropertyAction,
+  createPropertyAction,
+} from "@/features/properties/actions";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -78,36 +81,61 @@ export default async function PropertiesPage() {
           <div className="space-y-3">
             {properties.length > 0 ? (
               properties.map((property, index) => (
-                <Link
+                <div
                   className={`flex items-center gap-3 rounded-xl border p-3 transition hover:bg-muted/35 ${
                     index === 0 ? "border-border bg-card shadow-sm" : "border-transparent"
                   }`}
-                  href={`/properties/${property.id}`}
                   key={property.id}
                 >
-                  <span
-                    className={`flex size-10 items-center justify-center rounded-xl ${
-                      index === 0
-                        ? "bg-foreground text-background"
-                        : "bg-muted text-muted-foreground"
-                    }`}
+                  <Link
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                    href={`/properties/${property.id}`}
                   >
-                    <Building2 className="size-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
-                      {property.nickname}
+                    <span
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                        index === 0
+                          ? "bg-foreground text-background"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <Building2 className="size-5" />
                     </span>
-                    <span className="mt-1 block truncate text-sm text-muted-foreground">
-                      {[property.city, property.state].filter(Boolean).join(", ") ||
-                        property.type}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">
+                        {property.nickname}
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-muted-foreground">
+                        {[property.city, property.state].filter(Boolean).join(", ") ||
+                          property.type}
+                      </span>
                     </span>
+                  </Link>
+                  <span className="hidden shrink-0 items-center gap-1 text-muted-foreground sm:flex">
+                    <Button
+                      asChild
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <Link
+                        aria-label={`Open ${property.nickname}`}
+                        href={`/properties/${property.id}`}
+                      >
+                        <Pencil className="size-4" />
+                      </Link>
+                    </Button>
+                    <form action={archivePropertyAction}>
+                      <input name="propertyId" type="hidden" value={property.id} />
+                      <Button
+                        aria-label={`Archive ${property.nickname}`}
+                        size="icon"
+                        type="submit"
+                        variant="ghost"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </form>
                   </span>
-                  <span className="hidden items-center gap-3 text-muted-foreground sm:flex">
-                    <Pencil className="size-4" />
-                    <Trash2 className="size-4" />
-                  </span>
-                </Link>
+                </div>
               ))
             ) : (
               <div className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">

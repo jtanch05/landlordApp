@@ -5,8 +5,10 @@ import {
   Activity,
   Building2,
   FileText,
+  Pencil,
   ReceiptText,
   Search,
+  Trash2,
   UsersRound,
   WalletCards,
   Wrench,
@@ -446,33 +448,58 @@ export default async function PropertyWorkspacePage({
           </label>
           <div className="space-y-3">
             {properties.map((item) => (
-              <Link
+              <div
                 className={`flex items-center gap-3 rounded-xl border p-3 transition hover:bg-muted/35 ${
                   item.id === propertyId
                     ? "border-border bg-card shadow-sm"
                     : "border-transparent"
                 }`}
-                href={`/properties/${item.id}?tab=${activeTab}`}
                 key={item.id}
               >
-                <span
-                  className={`flex size-10 items-center justify-center rounded-xl ${
-                    item.id === propertyId
-                      ? "bg-foreground text-background"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                <Link
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                  href={`/properties/${item.id}?tab=${activeTab}`}
                 >
-                  <Building2 className="size-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">
-                    {item.nickname}
+                  <span
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                      item.id === propertyId
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <Building2 className="size-5" />
                   </span>
-                  <span className="mt-1 block truncate text-sm text-muted-foreground">
-                    {[item.city, item.state].filter(Boolean).join(", ") || item.type}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">
+                      {item.nickname}
+                    </span>
+                    <span className="mt-1 block truncate text-sm text-muted-foreground">
+                      {[item.city, item.state].filter(Boolean).join(", ") || item.type}
+                    </span>
                   </span>
+                </Link>
+                <span className="hidden shrink-0 items-center gap-1 text-muted-foreground sm:flex">
+                  <Button asChild size="icon" variant="ghost">
+                    <Link
+                      aria-label={`Open ${item.nickname}`}
+                      href={`/properties/${item.id}?tab=${activeTab}`}
+                    >
+                      <Pencil className="size-4" />
+                    </Link>
+                  </Button>
+                  <form action={archivePropertyAction}>
+                    <input name="propertyId" type="hidden" value={item.id} />
+                    <Button
+                      aria-label={`Archive ${item.nickname}`}
+                      size="icon"
+                      type="submit"
+                      variant="ghost"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </form>
                 </span>
-              </Link>
+              </div>
             ))}
           </div>
         </CardContent>
