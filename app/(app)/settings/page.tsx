@@ -1,5 +1,15 @@
 import { redirect } from "next/navigation";
+import { Plus, ReceiptText, Settings2, UsersRound } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { createExpenseCategoryAction } from "@/features/expenses/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,71 +46,106 @@ export default async function SettingsPage() {
   const categories = await getExpenseCategories();
 
   return (
-    <div className="space-y-8">
-      <header className="border-b border-[#d8decf] pb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#4d6650]">
-          Portfolio
+    <div className="mx-auto max-w-[880px] space-y-8 py-4">
+      <header>
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Portfolio defaults and operational configuration.
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-[#163300]">
-          Settings
-        </h1>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-          <h2 className="text-lg font-semibold text-[#163300]">
-            Expense categories
-          </h2>
-          <div className="mt-5 space-y-3">
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Portfolio</h2>
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
+            <div className="flex items-center justify-between gap-4 p-6">
+              <div className="flex items-center gap-4">
+                <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-primary">
+                  <Settings2 className="size-5" />
+                </span>
+                <div>
+                  <h3 className="font-semibold">Profile and portfolio defaults</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Theme switching stays deferred; v1 uses the light Claude-inspired palette.
+                  </p>
+                </div>
+              </div>
+              <Badge variant="secondary">Light only</Badge>
+            </div>
+            <div className="flex items-center justify-between gap-4 p-6">
+              <div className="flex items-center gap-4">
+                <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-primary">
+                  <UsersRound className="size-5" />
+                </span>
+                <div>
+                  <h3 className="font-semibold">Members and invitations</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Property-level Co-owner access is managed inside each property workspace.
+                  </p>
+                </div>
+              </div>
+              <Badge variant="outline">Property scoped</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Expense Categories</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>Current categories</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {categories.length > 0 ? (
               categories.map((category) => (
                 <div
-                  className="rounded-[6px] border border-[#d8decf] px-3 py-3"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-4"
                   key={category.id}
                 >
-                  <p className="text-sm font-semibold text-[#2f4a34]">
-                    {category.name}
-                  </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                    {category.default_tax_deductible
-                      ? "Tax deductible by default"
-                      : "Not tax deductible by default"}
-                  </p>
+                  <div className="flex items-center gap-4">
+                    <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-primary">
+                      <ReceiptText className="size-5" />
+                    </span>
+                    <div>
+                      <p className="font-semibold">{category.name}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {category.default_tax_deductible
+                          ? "Tax deductible by default"
+                          : "Not tax deductible by default"}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant={
+                      category.default_tax_deductible ? "success" : "secondary"
+                    }
+                  >
+                    {category.default_tax_deductible ? "Deductible" : "Standard"}
+                  </Badge>
                 </div>
               ))
             ) : (
-              <p className="text-sm leading-6 text-[#4d6650]">
+              <p className="text-sm text-muted-foreground">
                 Add categories such as Repairs, Assessment, Insurance, or Agent fees.
               </p>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <form
           action={createExpenseCategoryAction}
-          className="rounded-[8px] border border-[#d8decf] bg-white p-5"
+          className="grid gap-3 rounded-[18px] border border-border bg-card p-5 sm:grid-cols-[1fr_auto_auto]"
         >
-          <h2 className="text-lg font-semibold text-[#163300]">
-            New category
-          </h2>
-          <label className="mt-5 block text-sm font-medium text-[#2f4a34]">
-            Name
-            <input
-              className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-              name="name"
-              required
-            />
-          </label>
-          <label className="mt-4 flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
+          <Input name="name" placeholder="New category name" required />
+          <label className="flex items-center gap-2 text-sm font-medium">
             <input name="defaultTaxDeductible" type="checkbox" />
-            Tax deductible by default
+            Tax deductible
           </label>
-          <button
-            className="mt-5 w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-            type="submit"
-          >
+          <Button type="submit">
+            <Plus className="size-4" />
             Add category
-          </button>
+          </Button>
         </form>
       </section>
     </div>

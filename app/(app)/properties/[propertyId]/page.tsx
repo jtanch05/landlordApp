@@ -1,21 +1,53 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
-
 import {
-  archivePropertyAction,
-  updatePropertyAction,
-} from "@/features/properties/actions";
+  Activity,
+  Building2,
+  FileText,
+  ReceiptText,
+  Search,
+  UsersRound,
+  WalletCards,
+  Wrench,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createAgreementAction,
   createManualRentRecordAction,
   updateRentRecordPaymentAction,
 } from "@/features/agreements/actions";
 import { createDepositAction, updateDepositStatusAction } from "@/features/deposits/actions";
-import {
-  createExpenseAction,
-  createRecurringExpenseAction,
-} from "@/features/expenses/actions";
+import { createExpenseAction } from "@/features/expenses/actions";
 import { createMaintenanceIssueAction } from "@/features/maintenance/actions";
+import {
+  archivePropertyAction,
+  updatePropertyAction,
+} from "@/features/properties/actions";
+import {
+  normalizeWorkspaceTab,
+} from "@/features/properties/workspace-tabs";
+import { PropertyWorkspaceTabsClient } from "@/features/properties/components/PropertyWorkspaceTabsClient";
 import {
   inviteCoOwnerAction,
   revokePropertyAccessAction,
@@ -28,21 +60,23 @@ import { formatMyr } from "@/lib/utils/currency";
 export const dynamic = "force-dynamic";
 
 type PropertyWorkspacePageProps = {
-  params: Promise<{
-    propertyId: string;
-  }>;
+  params: Promise<{ propertyId: string }>;
+  searchParams?: Promise<{ tab?: string | string[] }>;
 };
 
-type PropertyDetail = {
-  address_line1: string | null;
+type PropertySummary = {
   city: string | null;
   id: string;
   nickname: string;
+  state: string | null;
+  type: string;
+};
+
+type PropertyDetail = PropertySummary & {
+  address_line1: string | null;
   notes: string | null;
   postcode: string | null;
-  state: string | null;
   status: string;
-  type: string;
 };
 
 type ActivityEvent = {
@@ -138,17 +172,19 @@ type InvitationSummary = {
   status: string;
 };
 
-const workspaceTabs = [
-  "Overview",
-  "Tenants",
-  "Agreements",
-  "Rent",
-  "Expenses",
-  "Maintenance",
-  "Deposits",
-  "Files",
-  "Activity",
-];
+async function getProperties(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from("properties")
+    .select("id,nickname,type,city,state")
+    .is("archived_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load properties: ${error.message}`);
+  }
+
+  return data as PropertySummary[];
+}
 
 async function getProperty(supabase: SupabaseClient, propertyId: string) {
   const { data, error } = await supabase
@@ -171,12 +207,9 @@ async function getPropertyActivity(supabase: SupabaseClient, propertyId: string)
     .select("id,action,summary,created_at")
     .eq("property_id", propertyId)
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(12);
 
-  if (error) {
-    throw new Error(`Failed to load property activity: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load activity: ${error.message}`);
   return data as ActivityEvent[];
 }
 
@@ -188,10 +221,7 @@ async function getPropertyAttachments(supabase: SupabaseClient, propertyId: stri
     .is("archived_at", null)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load property files: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load files: ${error.message}`);
   return data as AttachmentSummary[];
 }
 
@@ -203,10 +233,7 @@ async function getTenants(supabase: SupabaseClient, propertyId: string) {
     .is("archived_at", null)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load tenants: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load tenants: ${error.message}`);
   return data as TenantSummary[];
 }
 
@@ -218,10 +245,7 @@ async function getAgreements(supabase: SupabaseClient, propertyId: string) {
     .is("archived_at", null)
     .order("start_date", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load agreements: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load agreements: ${error.message}`);
   return data as AgreementSummary[];
 }
 
@@ -234,10 +258,7 @@ async function getRentRecords(supabase: SupabaseClient, propertyId: string) {
     .order("due_date", { ascending: true })
     .limit(24);
 
-  if (error) {
-    throw new Error(`Failed to load rent records: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load rent records: ${error.message}`);
   return data as RentRecordSummary[];
 }
 
@@ -248,10 +269,7 @@ async function getExpenseCategories(supabase: SupabaseClient) {
     .is("archived_at", null)
     .order("name", { ascending: true });
 
-  if (error) {
-    throw new Error(`Failed to load expense categories: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load expense categories: ${error.message}`);
   return data as ExpenseCategorySummary[];
 }
 
@@ -264,10 +282,7 @@ async function getExpenses(supabase: SupabaseClient, propertyId: string) {
     .order("expense_date", { ascending: false })
     .limit(12);
 
-  if (error) {
-    throw new Error(`Failed to load expenses: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load expenses: ${error.message}`);
   return data as ExpenseSummary[];
 }
 
@@ -278,10 +293,7 @@ async function getVendors(supabase: SupabaseClient) {
     .is("archived_at", null)
     .order("name", { ascending: true });
 
-  if (error) {
-    throw new Error(`Failed to load vendors: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load vendors: ${error.message}`);
   return data as VendorSummary[];
 }
 
@@ -294,10 +306,7 @@ async function getMaintenanceIssues(supabase: SupabaseClient, propertyId: string
     .order("reported_date", { ascending: false })
     .limit(12);
 
-  if (error) {
-    throw new Error(`Failed to load maintenance issues: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load maintenance: ${error.message}`);
   return data as MaintenanceIssueSummary[];
 }
 
@@ -309,10 +318,7 @@ async function getDeposits(supabase: SupabaseClient, propertyId: string) {
     .is("archived_at", null)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load deposits: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load deposits: ${error.message}`);
   return data as DepositSummary[];
 }
 
@@ -324,10 +330,7 @@ async function getPropertyAccess(supabase: SupabaseClient, propertyId: string) {
     .is("revoked_at", null)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load property access: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load property access: ${error.message}`);
   return data as PropertyAccessSummary[];
 }
 
@@ -338,17 +341,49 @@ async function getInvitations(supabase: SupabaseClient, propertyId: string) {
     .eq("property_id", propertyId)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load invitations: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to load invitations: ${error.message}`);
   return data as InvitationSummary[];
+}
+
+function statusVariant(status: string) {
+  if (status === "paid" || status === "occupied" || status === "held") return "success";
+  if (status === "overdue" || status === "unpaid") return "warning";
+  if (status === "archived") return "destructive";
+  return "secondary";
+}
+
+function EmptyPanel({
+  action,
+  description,
+  icon,
+  title,
+}: {
+  action?: React.ReactNode;
+  description: string;
+  icon: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center">
+      <div>
+        <div className="mx-auto flex size-14 items-center justify-center text-border">
+          {icon}
+        </div>
+        <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">{description}</p>
+        {action ? <div className="mt-5">{action}</div> : null}
+      </div>
+    </div>
+  );
 }
 
 export default async function PropertyWorkspacePage({
   params,
+  searchParams,
 }: PropertyWorkspacePageProps) {
   const { propertyId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const activeTab = normalizeWorkspaceTab(resolvedSearchParams.tab);
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
@@ -357,6 +392,7 @@ export default async function PropertyWorkspacePage({
   }
 
   const [
+    properties,
     property,
     activityEvents,
     attachments,
@@ -371,6 +407,7 @@ export default async function PropertyWorkspacePage({
     propertyAccess,
     invitations,
   ] = await Promise.all([
+    getProperties(supabase),
     getProperty(supabase, propertyId),
     getPropertyActivity(supabase, propertyId),
     getPropertyAttachments(supabase, propertyId),
@@ -385,1087 +422,502 @@ export default async function PropertyWorkspacePage({
     getPropertyAccess(supabase, propertyId),
     getInvitations(supabase, propertyId),
   ]);
-  const isVacant = property.status === "vacant";
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-5 border-b border-[#d8decf] pb-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div className="grid min-h-0 gap-5 lg:h-full xl:grid-cols-[378px_minmax(0,1fr)]">
+      <Card className="flex min-h-[640px] flex-col p-0 lg:h-full lg:min-h-0 lg:overflow-hidden">
+        <CardHeader className="pb-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#4d6650]">
-              Property workspace
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-[#163300]">
-              {property.nickname}
-            </h1>
-            <p className="mt-2 text-sm text-[#4d6650]">
-              {property.type}
-              {property.city ? ` in ${property.city}` : ""}
+            <CardTitle>Properties</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {properties.length} {properties.length === 1 ? "property" : "properties"}
             </p>
           </div>
-          <span className="w-fit rounded-full bg-[#f2f5ee] px-3 py-1 text-xs font-semibold capitalize text-[#2f4a34]">
-            {property.status}
-          </span>
-        </div>
-
-        <nav className="flex gap-2 overflow-x-auto pb-1">
-          {workspaceTabs.map((tab, index) => (
-            <span
-              className={
-                index === 0
-                  ? "rounded-full bg-[#163300] px-3 py-2 text-xs font-semibold text-white"
-                  : "rounded-full bg-[#f2f5ee] px-3 py-2 text-xs font-semibold text-[#4d6650]"
-              }
-              key={tab}
-            >
-              {tab}
-            </span>
-          ))}
-        </nav>
-      </header>
-
-      <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          <div className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Overview</h2>
-            <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7a8577]">
-                  Address
-                </dt>
-                <dd className="mt-1 text-sm text-[#2f4a34]">
-                  {[property.address_line1, property.city, property.state, property.postcode]
-                    .filter(Boolean)
-                    .join(", ") || "Not added yet"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7a8577]">
-                  Property type
-                </dt>
-                <dd className="mt-1 text-sm text-[#2f4a34]">{property.type}</dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7a8577]">
-                  Notes
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-[#2f4a34]">
-                  {property.notes || "No notes yet"}
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          <form
-            action={updatePropertyAction}
-            className="rounded-[8px] border border-[#d8decf] bg-white p-5"
-          >
-            <input name="propertyId" type="hidden" value={property.id} />
-            <h2 className="text-lg font-semibold text-[#163300]">
-              Edit property
-            </h2>
-
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Nickname
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.nickname}
-                  name="nickname"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Property type
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.type}
-                  name="type"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Status
-                <select
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.status === "occupied" ? "occupied" : "vacant"}
-                  name="status"
+          <Button asChild size="icon" variant="ghost">
+            <Link href="/properties#new-property" aria-label="Add property">
+              +
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <label className="relative block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search properties..." />
+          </label>
+          <div className="space-y-3">
+            {properties.map((item) => (
+              <Link
+                className={`flex items-center gap-3 rounded-xl border p-3 transition hover:bg-muted/35 ${
+                  item.id === propertyId
+                    ? "border-border bg-card shadow-sm"
+                    : "border-transparent"
+                }`}
+                href={`/properties/${item.id}?tab=${activeTab}`}
+                key={item.id}
+              >
+                <span
+                  className={`flex size-10 items-center justify-center rounded-xl ${
+                    item.id === propertyId
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground"
+                  }`}
                 >
-                  <option value="vacant">Vacant</option>
-                  <option value="occupied">Occupied</option>
-                </select>
-              </label>
+                  <Building2 className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">
+                    {item.nickname}
+                  </span>
+                  <span className="mt-1 block truncate text-sm text-muted-foreground">
+                    {[item.city, item.state].filter(Boolean).join(", ") || item.type}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Address
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.address_line1 ?? ""}
-                  name="addressLine1"
-                />
-              </label>
+      <Card className="flex min-h-[640px] flex-col overflow-hidden p-0 lg:h-full lg:min-h-0">
+        <CardHeader className="shrink-0 px-9 py-7">
+          <div>
+            <CardTitle className="text-2xl">{property.nickname}</CardTitle>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {[property.type, property.city, property.state].filter(Boolean).join(" - ")}
+            </p>
+          </div>
+          <Badge variant={statusVariant(property.status)}>{property.status}</Badge>
+        </CardHeader>
 
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                City
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.city ?? ""}
-                  name="city"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Postcode
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.postcode ?? ""}
-                  name="postcode"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                State
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.state ?? ""}
-                  name="state"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-[#2f4a34] sm:col-span-2">
-                Notes
-                <textarea
-                  className="mt-2 min-h-24 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue={property.notes ?? ""}
-                  name="notes"
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <button
-                className="rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                type="submit"
-              >
-                Save changes
-              </button>
-            </div>
-          </form>
-
-          <form
-            action={archivePropertyAction}
-            className="rounded-[8px] border border-[#ffd6d6] bg-[#fffafa] p-5"
-          >
-            <input name="propertyId" type="hidden" value={property.id} />
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-[#9c1c1c]">
-                  Archive property
-                </h2>
-                <p className="mt-1 text-sm text-[#754242]">
-                  Historical records stay linked and the property leaves the active list.
-                </p>
-              </div>
-              <button
-                className="rounded-[6px] border border-[#9c1c1c] px-4 py-3 text-sm font-semibold text-[#9c1c1c] transition hover:bg-[#fff0f0]"
-                type="submit"
-              >
-                Archive
-              </button>
-            </div>
-          </form>
-
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Sharing</h2>
-            <form
-              action={inviteCoOwnerAction}
-              className="mt-5 grid gap-3 rounded-[6px] border border-[#d8decf] bg-[#f7f7f2] p-4 sm:grid-cols-[1fr_auto_auto_auto]"
-            >
-              <input name="propertyId" type="hidden" value={property.id} />
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Co-owner email
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="email"
-                  required
-                  type="email"
-                />
-              </label>
-              <label className="mt-8 flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
-                <input name="canEdit" type="checkbox" />
-                Can edit
-              </label>
-              <label className="mt-8 flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
-                <input name="canViewTenantContact" type="checkbox" />
-                Tenant contact
-              </label>
-              <button
-                className="mt-7 rounded-[6px] bg-[#9fe870] px-4 py-2 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                type="submit"
-              >
-                Invite
-              </button>
-            </form>
-
-            <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <div>
-                <h3 className="text-sm font-semibold text-[#163300]">
-                  Active access
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {propertyAccess.length > 0 ? (
-                    propertyAccess.map((access) => (
-                      <form
-                        action={updatePropertyAccessAction}
-                        className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                        key={access.id}
-                      >
-                        <input name="propertyId" type="hidden" value={property.id} />
-                        <input name="accessId" type="hidden" value={access.id} />
-                        <p className="text-sm font-semibold text-[#2f4a34]">
-                          {access.user_id}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-3">
-                          <label className="flex items-center gap-2 text-xs font-medium text-[#4d6650]">
-                            <input
-                              defaultChecked={access.can_edit}
-                              name="canEdit"
-                              type="checkbox"
-                            />
-                            Can edit
-                          </label>
-                          <label className="flex items-center gap-2 text-xs font-medium text-[#4d6650]">
-                            <input
-                              defaultChecked={access.can_view_tenant_contact}
-                              name="canViewTenantContact"
-                              type="checkbox"
-                            />
-                            Tenant contact
-                          </label>
-                          <button
-                            className="rounded-[6px] bg-[#9fe870] px-3 py-2 text-xs font-semibold text-[#163300]"
-                            type="submit"
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="rounded-[6px] border border-[#9c1c1c] px-3 py-2 text-xs font-semibold text-[#9c1c1c]"
-                            formAction={revokePropertyAccessAction}
-                            type="submit"
-                          >
-                            Revoke
-                          </button>
-                        </div>
-                      </form>
-                    ))
-                  ) : (
-                    <p className="text-sm leading-6 text-[#4d6650]">
-                      No active Co-owner access.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-[#163300]">
-                  Invitations
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {invitations.length > 0 ? (
-                    invitations.map((invitation) => (
-                      <div
-                        className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                        key={invitation.id}
-                      >
-                        <p className="text-sm font-semibold text-[#2f4a34]">
-                          {invitation.email}
-                        </p>
-                        <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                          {invitation.status} · expires{" "}
-                          {new Date(invitation.expires_at).toLocaleDateString()}
-                        </p>
+        <PropertyWorkspaceTabsClient initialTab={activeTab}>
+            <div data-tab="overview" className="grid gap-6 xl:grid-cols-[1fr_360px]">
+              <div className="space-y-6">
+                <Card className="rounded-xl shadow-none">
+                  <CardHeader>
+                    <CardTitle>Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <dt className="text-xs font-semibold uppercase text-muted-foreground">
+                          Address
+                        </dt>
+                        <dd className="mt-1 text-sm">
+                          {[property.address_line1, property.city, property.state, property.postcode]
+                            .filter(Boolean)
+                            .join(", ") || "Not added yet"}
+                        </dd>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm leading-6 text-[#4d6650]">
-                      No invitations yet.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase text-muted-foreground">
+                          Property type
+                        </dt>
+                        <dd className="mt-1 text-sm">{property.type}</dd>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <dt className="text-xs font-semibold uppercase text-muted-foreground">
+                          Notes
+                        </dt>
+                        <dd className="mt-1 text-sm leading-6">
+                          {property.notes || "No notes yet"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
 
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Tenants</h2>
-            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
-              <div className="space-y-3">
-                {tenants.length > 0 ? (
-                  tenants.map((tenant) => (
-                    <div
-                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                      key={tenant.id}
-                    >
-                      <p className="text-sm font-semibold text-[#2f4a34]">
-                        {tenant.name}
-                      </p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                        {tenant.status}
-                      </p>
-                      <p className="mt-2 text-sm text-[#4d6650]">
-                        {[tenant.phone, tenant.email].filter(Boolean).join(" · ") ||
-                          "No contact details"}
-                      </p>
+                <form action={updatePropertyAction} className="grid gap-4 rounded-xl border border-border p-5 sm:grid-cols-2">
+                  <input name="propertyId" type="hidden" value={property.id} />
+                  <h2 className="text-lg font-semibold sm:col-span-2">Edit property</h2>
+                  <label className="block text-sm font-medium">
+                    Nickname
+                    <Input className="mt-2" defaultValue={property.nickname} name="nickname" required />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    Property type
+                    <Input className="mt-2" defaultValue={property.type} name="type" required />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    Status
+                    <Select className="mt-2" defaultValue={property.status === "occupied" ? "occupied" : "vacant"} name="status">
+                      <option value="vacant">Vacant</option>
+                      <option value="occupied">Occupied</option>
+                    </Select>
+                  </label>
+                  <label className="block text-sm font-medium">
+                    Address
+                    <Input className="mt-2" defaultValue={property.address_line1 ?? ""} name="addressLine1" />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    City
+                    <Input className="mt-2" defaultValue={property.city ?? ""} name="city" />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    Postcode
+                    <Input className="mt-2" defaultValue={property.postcode ?? ""} name="postcode" />
+                  </label>
+                  <label className="block text-sm font-medium sm:col-span-2">
+                    State
+                    <Input className="mt-2" defaultValue={property.state ?? ""} name="state" />
+                  </label>
+                  <label className="block text-sm font-medium sm:col-span-2">
+                    Notes
+                    <Textarea className="mt-2" defaultValue={property.notes ?? ""} name="notes" />
+                  </label>
+                  <Button className="w-fit" type="submit">Save changes</Button>
+                </form>
+              </div>
+
+              <aside className="space-y-6">
+                <Card className="rounded-xl shadow-none">
+                  <CardHeader>
+                    <CardTitle>Sharing</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <form action={inviteCoOwnerAction} className="space-y-3">
+                      <input name="propertyId" type="hidden" value={property.id} />
+                      <Input name="email" placeholder="co-owner@email.com" required type="email" />
+                      <label className="flex items-center gap-2 text-sm">
+                        <input name="canEdit" type="checkbox" /> Can edit
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input name="canViewTenantContact" type="checkbox" /> Tenant contact
+                      </label>
+                      <Button className="w-full" type="submit">Invite Co-owner</Button>
+                    </form>
+                    <Separator />
+                    <div className="space-y-3">
+                      {propertyAccess.map((access) => (
+                        <form action={updatePropertyAccessAction} className="space-y-2 rounded-xl border border-border p-3" key={access.id}>
+                          <input name="propertyId" type="hidden" value={property.id} />
+                          <input name="accessId" type="hidden" value={access.id} />
+                          <p className="truncate text-sm font-semibold">{access.user_id}</p>
+                          <label className="flex items-center gap-2 text-xs">
+                            <input defaultChecked={access.can_edit} name="canEdit" type="checkbox" /> Can edit
+                          </label>
+                          <label className="flex items-center gap-2 text-xs">
+                            <input defaultChecked={access.can_view_tenant_contact} name="canViewTenantContact" type="checkbox" /> Tenant contact
+                          </label>
+                          <div className="flex gap-2">
+                            <Button size="sm" type="submit">Save</Button>
+                            <Button formAction={revokePropertyAccessAction} size="sm" type="submit" variant="destructive">Revoke</Button>
+                          </div>
+                        </form>
+                      ))}
+                      {invitations.map((invitation) => (
+                        <div className="rounded-xl border border-border p-3 text-sm" key={invitation.id}>
+                          <p className="font-semibold">{invitation.email}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {invitation.status} - expires {invitation.expires_at}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm leading-6 text-[#4d6650]">
-                    No tenant records yet.
-                  </p>
-                )}
-              </div>
+                  </CardContent>
+                </Card>
 
-              <form action={createTenantAction} className="space-y-3">
+                <form action={archivePropertyAction} className="rounded-xl border border-destructive/25 bg-destructive/5 p-5">
+                  <input name="propertyId" type="hidden" value={property.id} />
+                  <h2 className="font-semibold text-destructive">Archive property</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Historical records stay linked and the property leaves active views.
+                  </p>
+                  <Button className="mt-4" type="submit" variant="destructive">Archive</Button>
+                </form>
+              </aside>
+            </div>
+            <div data-tab="tenants" className="grid gap-8 xl:grid-cols-[1fr_340px]">
+              {tenants.length > 0 ? (
+                <div className="grid gap-3">
+                  {tenants.map((tenant) => (
+                    <Card className="rounded-xl shadow-none" key={tenant.id}>
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h2 className="font-semibold">{tenant.name}</h2>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {[tenant.phone, tenant.email].filter(Boolean).join(" - ") ||
+                                "No contact details"}
+                            </p>
+                          </div>
+                          <Badge variant={statusVariant(tenant.status)}>{tenant.status}</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <EmptyPanel
+                  description="Add a tenant and link them to this property."
+                  icon={<UsersRound className="size-12" />}
+                  title="No tenants yet"
+                />
+              )}
+              <form action={createTenantAction} className="space-y-4">
+                <h2 className="text-lg font-semibold">New tenant</h2>
                 <input name="propertyId" type="hidden" value={property.id} />
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Tenant name
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="name"
-                    required
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Phone
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="phone"
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Email
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="email"
-                    type="email"
-                  />
-                </label>
-                <button
-                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                  type="submit"
-                >
-                  Add tenant
-                </button>
+                <Input name="name" placeholder="Tenant name" required />
+                <Input name="phone" placeholder="Phone" />
+                <Input name="email" placeholder="Email" type="email" />
+                <Textarea name="notes" placeholder="Notes" />
+                <Button className="w-full" type="submit">Add Tenant</Button>
               </form>
             </div>
 
-            <form
-              action={createRecurringExpenseAction}
-              className="mt-6 grid gap-3 rounded-[6px] border border-[#d8decf] bg-[#f7f7f2] p-4 sm:grid-cols-5"
-            >
-              <input name="propertyId" type="hidden" value={property.id} />
-              <label className="block text-sm font-medium text-[#2f4a34] sm:col-span-2">
-                Recurring description
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="description"
-                  required
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Category
-                <select
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="categoryId"
-                  required
-                >
-                  <option value="">Select</option>
-                  {expenseCategories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Amount
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  min="0"
-                  name="amount"
-                  required
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Day
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue="1"
-                  max="31"
-                  min="1"
-                  name="dayOfMonth"
-                  required
-                  type="number"
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Starts
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="startsOn"
-                  required
-                  type="date"
-                />
-              </label>
-              <button
-                className="rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d] sm:col-span-4"
-                type="submit"
-              >
-                Save recurring prompt
-              </button>
-            </form>
-          </section>
-
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Agreements</h2>
-            <div className="mt-5 space-y-3">
-              {agreements.length > 0 ? (
-                agreements.map((agreement) => (
-                  <div
-                    className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                    key={agreement.id}
-                  >
-                    <p className="text-sm font-semibold text-[#2f4a34]">
-                      {formatMyr(agreement.rent_amount_cents)} monthly
-                    </p>
-                    <p className="mt-1 text-sm text-[#4d6650]">
-                      {agreement.start_date} to {agreement.end_date}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm leading-6 text-[#4d6650]">
-                  No agreements yet.
-                </p>
-              )}
-            </div>
-
-            <form
-              action={createAgreementAction}
-              className="mt-6 grid gap-4 sm:grid-cols-2"
-            >
-              <input name="propertyId" type="hidden" value={property.id} />
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Tenant
-                <select
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="tenantId"
-                  required
-                >
+            <div data-tab="agreements" className="grid gap-8 xl:grid-cols-[1fr_360px]">
+              <div className="space-y-3">
+                {agreements.map((agreement) => (
+                  <Card className="rounded-xl shadow-none" key={agreement.id}>
+                    <CardContent className="p-5">
+                      <h2 className="font-semibold capitalize">{agreement.type.replaceAll("_", " ")}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {agreement.start_date} to {agreement.end_date}
+                      </p>
+                      <p className="mt-3 font-semibold">{formatMyr(agreement.rent_amount_cents)}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+                {agreements.length === 0 ? (
+                  <EmptyPanel description="Create an agreement to generate the rent schedule." icon={<FileText className="size-12" />} title="No agreements yet" />
+                ) : null}
+              </div>
+              <form action={createAgreementAction} className="space-y-4">
+                <h2 className="text-lg font-semibold">New agreement</h2>
+                <input name="propertyId" type="hidden" value={property.id} />
+                <Select name="tenantId" required>
                   <option value="">Select tenant</option>
                   {tenants.map((tenant) => (
-                    <option key={tenant.id} value={tenant.id}>
-                      {tenant.name}
-                    </option>
+                    <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
                   ))}
-                </select>
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Type
-                <select
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="type"
-                  defaultValue="one_year"
-                >
+                </Select>
+                <Select name="type" defaultValue="one_year">
                   <option value="six_months">Six months</option>
                   <option value="one_year">One year</option>
                   <option value="two_years">Two years</option>
                   <option value="three_years">Three years</option>
                   <option value="custom">Custom</option>
-                </select>
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Start date
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="startDate"
-                  required
-                  type="date"
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Custom end date
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="customEndDate"
-                  type="date"
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Rent amount
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  min="0"
-                  name="rentAmount"
-                  required
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Rent due day
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  defaultValue="1"
-                  max="31"
-                  min="1"
-                  name="rentDueDay"
-                  required
-                  type="number"
-                />
-              </label>
-              <button
-                className="rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d] sm:col-span-2"
-                type="submit"
-              >
-                Create agreement and rent records
-              </button>
-            </form>
-          </section>
-
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Rent ledger</h2>
-            {agreements.length === 0 ? (
-              <form
-                action={createManualRentRecordAction}
-                className="mt-5 grid gap-3 rounded-[6px] border border-[#d8decf] bg-[#f7f7f2] p-4 sm:grid-cols-4"
-              >
-                <input name="propertyId" type="hidden" value={property.id} />
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Month
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="month"
-                    required
-                    type="month"
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Due date
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="dueDate"
-                    required
-                    type="date"
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Amount
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    min="0"
-                    name="amountDue"
-                    required
-                    step="0.01"
-                    type="number"
-                  />
-                </label>
-                <button
-                  className="mt-7 rounded-[6px] bg-[#9fe870] px-4 py-2 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                  type="submit"
-                >
-                  Add rent
-                </button>
+                </Select>
+                <Input name="startDate" required type="date" />
+                <Input name="customEndDate" type="date" />
+                <Input min="1" name="rentDueDay" placeholder="Rent due day" required type="number" />
+                <Input min="0" name="rentAmount" placeholder="Monthly rent (RM)" required step="0.01" type="number" />
+                <Input name="renewalOption" placeholder="Renewal option" />
+                <Textarea name="notes" placeholder="Notes" />
+                <Button className="w-full" type="submit">Create agreement</Button>
               </form>
-            ) : null}
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                  <tr>
-                    <th className="border-b border-[#d8decf] py-2">Month</th>
-                    <th className="border-b border-[#d8decf] py-2">Due</th>
-                    <th className="border-b border-[#d8decf] py-2">Amount</th>
-                    <th className="border-b border-[#d8decf] py-2">Paid</th>
-                    <th className="border-b border-[#d8decf] py-2">Status</th>
-                    <th className="border-b border-[#d8decf] py-2">Update</th>
-                  </tr>
-                </thead>
-                <tbody className="text-[#2f4a34]">
-                  {rentRecords.map((record) => (
-                    <tr key={record.id}>
-                      <td className="border-b border-[#eef1ea] py-3">
-                        {record.month}
-                      </td>
-                      <td className="border-b border-[#eef1ea] py-3">
-                        {record.due_date}
-                      </td>
-                      <td className="border-b border-[#eef1ea] py-3">
-                        {formatMyr(record.amount_due_cents)}
-                      </td>
-                      <td className="border-b border-[#eef1ea] py-3">
-                        {formatMyr(record.amount_paid_cents)}
-                      </td>
-                      <td className="border-b border-[#eef1ea] py-3 capitalize">
-                        {record.status}
-                      </td>
-                      <td className="border-b border-[#eef1ea] py-3">
-                        <form
-                          action={updateRentRecordPaymentAction}
-                          className="grid min-w-[320px] gap-2"
-                        >
-                          <input name="propertyId" type="hidden" value={property.id} />
-                          <input name="rentRecordId" type="hidden" value={record.id} />
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              className="rounded-[6px] border border-[#cbd5c1] px-2 py-2 text-xs text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                              defaultValue={(record.amount_paid_cents / 100).toFixed(2)}
-                              min="0"
-                              name="amountPaid"
-                              step="0.01"
-                              type="number"
-                            />
-                            <input
-                              className="rounded-[6px] border border-[#cbd5c1] px-2 py-2 text-xs text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                              name="paymentDate"
-                              type="date"
-                            />
-                          </div>
-                          <div className="grid grid-cols-[1fr_auto] gap-2">
-                            <input
-                              className="rounded-[6px] border border-[#cbd5c1] px-2 py-2 text-xs text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                              name="paymentMethod"
-                              placeholder="Method"
-                            />
-                            <button
-                              className="rounded-[6px] bg-[#9fe870] px-3 py-2 text-xs font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                              type="submit"
-                            >
-                              Save
-                            </button>
-                          </div>
-                        </form>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {rentRecords.length === 0 ? (
-                <p className="mt-4 text-sm leading-6 text-[#4d6650]">
-                  Rent records will appear after an agreement is created.
-                </p>
-              ) : null}
             </div>
-          </section>
 
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Expenses</h2>
-            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
+            <div data-tab="rent" className="space-y-6">
+              <Card className="rounded-xl shadow-none">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Month</TableHead>
+                        <TableHead>Due</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payment</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rentRecords.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="font-medium">{record.month}</TableCell>
+                          <TableCell>{record.due_date}</TableCell>
+                          <TableCell>{formatMyr(record.amount_due_cents)}</TableCell>
+                          <TableCell><Badge variant={statusVariant(record.status)}>{record.status}</Badge></TableCell>
+                          <TableCell>
+                            <form action={updateRentRecordPaymentAction} className="grid gap-2 sm:grid-cols-[90px_1fr_auto]">
+                              <input name="propertyId" type="hidden" value={property.id} />
+                              <input name="rentRecordId" type="hidden" value={record.id} />
+                              <Input defaultValue={(record.amount_paid_cents / 100).toString()} min="0" name="amountPaid" step="0.01" type="number" />
+                              <Input name="paymentMethod" placeholder="Method" />
+                              <Button size="sm" type="submit">Save</Button>
+                            </form>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {rentRecords.length === 0 ? (
+                    <div className="p-6">
+                      <EmptyPanel description="Rent records appear after an agreement is created." icon={<WalletCards className="size-12" />} title="No rent records yet" />
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+              <form action={createManualRentRecordAction} className="grid gap-3 rounded-xl border border-border p-5 md:grid-cols-[1fr_1fr_1fr_auto]">
+                <input name="propertyId" type="hidden" value={property.id} />
+                <Input name="month" placeholder="2026-06" required />
+                <Input name="dueDate" required type="date" />
+                <Input min="0" name="amountDue" placeholder="Amount due" required step="0.01" type="number" />
+                <Button type="submit">Add manual rent</Button>
+              </form>
+            </div>
+
+            <div data-tab="expenses" className="grid gap-8 xl:grid-cols-[1fr_340px]">
               <div className="space-y-3">
-                {expenses.length > 0 ? (
-                  expenses.map((expense) => (
-                    <div
-                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                      key={expense.id}
-                    >
+                {expenses.map((expense) => (
+                  <Card className="rounded-xl shadow-none" key={expense.id}>
+                    <CardContent className="flex items-start justify-between gap-3 p-5">
+                      <div>
+                        <h2 className="font-semibold">{expense.description}</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">{expense.expense_date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{formatMyr(expense.amount_cents)}</p>
+                        <Badge className="mt-2" variant={statusVariant(expense.status)}>{expense.status}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {expenses.length === 0 ? (
+                  <EmptyPanel description="Track property costs and tax-deductible expenses here." icon={<ReceiptText className="size-12" />} title="No expenses recorded yet" />
+                ) : null}
+              </div>
+              <form action={createExpenseAction} className="space-y-4">
+                <h2 className="text-lg font-semibold">Add expense</h2>
+                <input name="propertyId" type="hidden" value={property.id} />
+                <Input name="description" placeholder="Description" required />
+                <Select name="categoryId" required>
+                  <option value="">Select category</option>
+                  {expenseCategories.map((category) => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </Select>
+                <Input min="0" name="amount" placeholder="Amount" required step="0.01" type="number" />
+                <Input name="expenseDate" required type="date" />
+                <Select name="status" defaultValue="unpaid">
+                  <option value="unpaid">Unpaid</option>
+                  <option value="paid">Paid</option>
+                </Select>
+                <label className="flex items-center gap-2 text-sm"><input name="taxDeductible" type="checkbox" /> Tax deductible</label>
+                <Button className="w-full" type="submit">Add expense</Button>
+              </form>
+            </div>
+
+            <div data-tab="maintenance" className="grid gap-8 xl:grid-cols-[1fr_340px]">
+              <div className="space-y-3">
+                {maintenanceIssues.map((issue) => (
+                  <Card className="rounded-xl shadow-none" key={issue.id}>
+                    <CardContent className="p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-[#2f4a34]">
-                            {expense.description}
-                          </p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                            {expense.expense_date}
-                          </p>
+                          <h2 className="font-semibold">{issue.description}</h2>
+                          <p className="mt-1 text-sm text-muted-foreground">{issue.reported_date}</p>
                         </div>
-                        <span className="text-sm font-semibold text-[#163300]">
-                          {formatMyr(expense.amount_cents)}
-                        </span>
+                        <Badge variant={statusVariant(issue.status)}>{issue.status}</Badge>
                       </div>
-                      <p className="mt-2 text-xs capitalize text-[#4d6650]">
-                        {expense.status}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm leading-6 text-[#4d6650]">
-                    No expenses recorded yet.
-                  </p>
-                )}
+                      <p className="mt-3 text-sm">{issue.cost_cents ? formatMyr(issue.cost_cents) : "No cost recorded"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+                {maintenanceIssues.length === 0 ? (
+                  <EmptyPanel description="Track repairs and service items for this property." icon={<Wrench className="size-12" />} title="No maintenance issues yet" />
+                ) : null}
               </div>
-
-              <form action={createExpenseAction} className="space-y-3">
+              <form action={createMaintenanceIssueAction} className="space-y-4">
+                <h2 className="text-lg font-semibold">Add issue</h2>
                 <input name="propertyId" type="hidden" value={property.id} />
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Description
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="description"
-                    required
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Category
-                  <select
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="categoryId"
-                    required
-                  >
-                    <option value="">Select category</option>
-                    {expenseCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block text-sm font-medium text-[#2f4a34]">
-                    Amount
-                    <input
-                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                      min="0"
-                      name="amount"
-                      required
-                      step="0.01"
-                      type="number"
-                    />
-                  </label>
-                  <label className="block text-sm font-medium text-[#2f4a34]">
-                    Date
-                    <input
-                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                      name="expenseDate"
-                      required
-                      type="date"
-                    />
-                  </label>
-                </div>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Status
-                  <select
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="status"
-                    defaultValue="unpaid"
-                  >
-                    <option value="unpaid">Unpaid</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-2 text-sm font-medium text-[#2f4a34]">
-                  <input name="taxDeductible" type="checkbox" />
-                  Tax deductible
-                </label>
-                <button
-                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                  type="submit"
-                >
-                  Add expense
-                </button>
+                <Textarea name="description" placeholder="Description" required />
+                <Input name="issueType" placeholder="Issue type" />
+                <Select name="vendorId">
+                  <option value="">No vendor</option>
+                  {vendors.map((vendor) => (
+                    <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                  ))}
+                </Select>
+                <Select name="expenseCategoryId">
+                  <option value="">No linked expense</option>
+                  {expenseCategories.map((category) => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </Select>
+                <Input name="reportedDate" required type="date" />
+                <Input min="0" name="cost" placeholder="Cost" step="0.01" type="number" />
+                <Button className="w-full" type="submit">Add issue</Button>
               </form>
             </div>
-          </section>
 
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">
-              Maintenance
-            </h2>
-            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
+            <div data-tab="deposits" className="grid gap-8 xl:grid-cols-[1fr_340px]">
               <div className="space-y-3">
-                {maintenanceIssues.length > 0 ? (
-                  maintenanceIssues.map((issue) => (
-                    <div
-                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                      key={issue.id}
-                    >
-                      <p className="text-sm font-semibold text-[#2f4a34]">
-                        {issue.description}
-                      </p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                        {issue.reported_date} · {issue.status}
-                      </p>
-                      <p className="mt-2 text-sm text-[#4d6650]">
-                        {issue.cost_cents ? formatMyr(issue.cost_cents) : "No cost recorded"}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm leading-6 text-[#4d6650]">
-                    No maintenance issues recorded yet.
-                  </p>
-                )}
-              </div>
-
-              <form action={createMaintenanceIssueAction} className="space-y-3">
-                <input name="propertyId" type="hidden" value={property.id} />
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Description
-                  <textarea
-                    className="mt-2 min-h-20 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="description"
-                    required
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Issue type
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="issueType"
-                    placeholder="Plumbing, electrical"
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Vendor
-                  <select
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="vendorId"
-                  >
-                    <option value="">No vendor</option>
-                    {vendors.map((vendor) => (
-                      <option key={vendor.id} value={vendor.id}>
-                        {vendor.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Expense category for cost
-                  <select
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="expenseCategoryId"
-                  >
-                    <option value="">No linked expense</option>
-                    {expenseCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block text-sm font-medium text-[#2f4a34]">
-                    Reported
-                    <input
-                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                      name="reportedDate"
-                      required
-                      type="date"
-                    />
-                  </label>
-                  <label className="block text-sm font-medium text-[#2f4a34]">
-                    Cost
-                    <input
-                      className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                      min="0"
-                      name="cost"
-                      step="0.01"
-                      type="number"
-                    />
-                  </label>
-                </div>
-                <button
-                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                  type="submit"
-                >
-                  Add issue
-                </button>
-              </form>
-            </div>
-          </section>
-
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">Deposits</h2>
-            <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
-              <div className="space-y-3">
-                {deposits.length > 0 ? (
-                  deposits.map((deposit) => (
-                    <form
-                      action={updateDepositStatusAction}
-                      className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                      key={deposit.id}
-                    >
-                      <input name="propertyId" type="hidden" value={property.id} />
-                      <input name="depositId" type="hidden" value={deposit.id} />
-                      <p className="text-sm font-semibold text-[#2f4a34]">
-                        {deposit.label}
-                      </p>
-                      <p className="mt-1 text-sm text-[#4d6650]">
-                        {formatMyr(deposit.amount_cents)}
-                      </p>
-                      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                        <select
-                          className="rounded-[6px] border border-[#cbd5c1] bg-white px-2 py-2 text-xs text-[#163300]"
-                          defaultValue={deposit.status}
-                          name="status"
-                        >
-                          <option value="held">Held</option>
-                          <option value="refunded">Refunded</option>
-                        </select>
-                        <input
-                          className="rounded-[6px] border border-[#cbd5c1] px-2 py-2 text-xs text-[#163300]"
-                          defaultValue={deposit.refund_date ?? ""}
-                          name="refundDate"
-                          type="date"
-                        />
-                        <button
-                          className="rounded-[6px] bg-[#9fe870] px-3 py-2 text-xs font-semibold text-[#163300]"
-                          type="submit"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </form>
-                  ))
-                ) : (
-                  <p className="text-sm leading-6 text-[#4d6650]">
-                    No deposits recorded yet.
-                  </p>
-                )}
-              </div>
-
-              <form action={createDepositAction} className="space-y-3">
-                <input name="propertyId" type="hidden" value={property.id} />
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Agreement
-                  <select
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="agreementId"
-                    required
-                  >
-                    <option value="">Select agreement</option>
-                    {agreements.map((agreement) => (
-                      <option key={agreement.id} value={agreement.id}>
-                        {agreement.start_date} to {agreement.end_date}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Label
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    name="label"
-                    placeholder="Security deposit"
-                    required
-                  />
-                </label>
-                <label className="block text-sm font-medium text-[#2f4a34]">
-                  Amount
-                  <input
-                    className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                    min="0"
-                    name="amount"
-                    required
-                    step="0.01"
-                    type="number"
-                  />
-                </label>
-                <button
-                  className="w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-                  type="submit"
-                >
-                  Add deposit
-                </button>
-              </form>
-            </div>
-          </section>
-
-          <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-[#163300]">
-                  Files
-                </h2>
-                <p className="mt-1 text-sm text-[#4d6650]">
-                  {attachments.length} linked {attachments.length === 1 ? "file" : "files"}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {attachments.length > 0 ? (
-                attachments.map((attachment) => (
-                  <div
-                    className="rounded-[6px] border border-[#d8decf] px-3 py-3"
-                    key={attachment.id}
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                {deposits.map((deposit) => (
+                  <form action={updateDepositStatusAction} className="rounded-xl border border-border p-5" key={deposit.id}>
+                    <input name="propertyId" type="hidden" value={property.id} />
+                    <input name="depositId" type="hidden" value={deposit.id} />
+                    <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-[#2f4a34]">
-                          {attachment.file_name}
-                        </p>
-                        <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                          {attachment.target_type}
-                        </p>
+                        <h2 className="font-semibold">{deposit.label}</h2>
+                        <p className="mt-1 text-sm">{formatMyr(deposit.amount_cents)}</p>
                       </div>
-                      <span className="w-fit rounded-full bg-[#f2f5ee] px-3 py-1 text-xs font-semibold text-[#4d6650]">
-                        {attachment.is_private ? "Private" : "Shared"}
-                      </span>
+                      <Badge variant={statusVariant(deposit.status)}>{deposit.status}</Badge>
                     </div>
-                    <p className="mt-2 text-xs text-[#7a8577]">
-                      {attachment.size_bytes
-                        ? `${Math.round(attachment.size_bytes / 1024)} KB`
-                        : "Size not recorded"}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm leading-6 text-[#4d6650]">
-                  Linked agreement, expense, maintenance, and deposit files will
-                  appear here.
-                </p>
-              )}
+                    <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                      <Select defaultValue={deposit.status} name="status">
+                        <option value="held">Held</option>
+                        <option value="refunded">Refunded</option>
+                      </Select>
+                      <Input defaultValue={deposit.refund_date ?? ""} name="refundDate" type="date" />
+                      <Button type="submit">Save</Button>
+                    </div>
+                  </form>
+                ))}
+                {deposits.length === 0 ? (
+                  <EmptyPanel description="Deposits tied to agreements will appear here." icon={<WalletCards className="size-12" />} title="No deposits recorded yet" />
+                ) : null}
+              </div>
+              <form action={createDepositAction} className="space-y-4">
+                <h2 className="text-lg font-semibold">Add deposit</h2>
+                <input name="propertyId" type="hidden" value={property.id} />
+                <Select name="agreementId" required>
+                  <option value="">Select agreement</option>
+                  {agreements.map((agreement) => (
+                    <option key={agreement.id} value={agreement.id}>{agreement.start_date} to {agreement.end_date}</option>
+                  ))}
+                </Select>
+                <Input name="label" placeholder="Security deposit" required />
+                <Input min="0" name="amount" placeholder="Amount" required step="0.01" type="number" />
+                <Button className="w-full" type="submit">Add deposit</Button>
+              </form>
             </div>
-          </section>
-        </div>
 
-        <div className="space-y-6">
-          <aside className="rounded-[8px] border border-[#d8decf] bg-[#f7f7f2] p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">
-              {isVacant ? "Vacant setup" : "Current setup"}
-            </h2>
-            <div className="mt-5 space-y-3">
-              {(isVacant
-                ? ["Add tenant record", "Create agreement", "Generate rent schedule"]
-                : ["Review tenant record", "Check active agreement", "Review rent ledger"]
-              ).map((item) => (
-                <div
-                  className="rounded-[6px] border border-[#d8decf] bg-white px-3 py-3 text-sm font-medium text-[#2f4a34]"
-                  key={item}
-                >
-                  {item}
-                </div>
+            <div data-tab="files" className="space-y-3">
+              {attachments.map((attachment) => (
+                <Card className="rounded-xl shadow-none" key={attachment.id}>
+                  <CardContent className="flex items-start justify-between gap-3 p-5">
+                    <div>
+                      <h2 className="font-semibold">{attachment.file_name}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {attachment.target_type} - {attachment.created_at}
+                      </p>
+                    </div>
+                    <Badge variant={attachment.is_private ? "warning" : "secondary"}>
+                      {attachment.is_private ? "Private to Host" : "Shared"}
+                    </Badge>
+                  </CardContent>
+                </Card>
               ))}
+              {attachments.length === 0 ? (
+                <EmptyPanel description="Linked agreement, expense, maintenance, and deposit files will appear here." icon={<FileText className="size-12" />} title="No files yet" />
+              ) : null}
             </div>
-          </aside>
 
-          <aside className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[#163300]">
-              Activity
-            </h2>
-            <div className="mt-5 space-y-4">
-              {activityEvents.length > 0 ? (
-                activityEvents.map((event) => (
-                  <div className="border-l-2 border-[#9fe870] pl-3" key={event.id}>
-                    <p className="text-sm font-medium text-[#2f4a34]">
-                      {event.summary}
-                    </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                      {event.action} · {new Date(event.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm leading-6 text-[#4d6650]">
-                  Activity will appear after property changes are recorded.
-                </p>
-              )}
+            <div data-tab="activity" className="space-y-4">
+              {activityEvents.map((event) => (
+                <article className="border-l-2 border-primary pl-4" key={event.id}>
+                  <p className="text-sm font-semibold">{event.summary}</p>
+                  <p className="mt-1 text-xs uppercase text-muted-foreground">
+                    {event.action} - {new Date(event.created_at).toLocaleString()}
+                  </p>
+                </article>
+              ))}
+              {activityEvents.length === 0 ? (
+                <EmptyPanel description="Activity will appear after property changes are recorded." icon={<Activity className="size-12" />} title="No activity yet" />
+              ) : null}
             </div>
-          </aside>
-        </div>
-      </section>
+        </PropertyWorkspaceTabsClient>
+      </Card>
     </div>
   );
 }

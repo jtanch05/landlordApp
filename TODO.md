@@ -111,13 +111,13 @@ Current source files:
 
 ## Phase 9: Shadcn Adaptive Workbench Redesign
 
-- [ ] Step 9.1: Install/configure shadcn infrastructure, including `components.json`, `cn()` utility, CSS variables, and the initial component primitives.
-- [ ] Step 9.2: Update global styling to the Claude-inspired warm neutral palette with light-only theme behavior.
-- [ ] Step 9.3: Rebuild the authenticated app shell with the floating icon rail and route-specific workbench layouts.
-- [ ] Step 9.4: Redesign Dashboard as a full-width canvas with KPI strip, cash-flow card, expense breakdown, recent activity, and upcoming alerts.
-- [ ] Step 9.5: Redesign Properties with icon rail, property list/search panel, and property workspace panel.
-- [ ] Step 9.6: Refactor Property Workspace into shadcn tabs for Overview, Tenants, Agreements, Ledger/Rent, Expenses, Maintenance, Deposits, Files, and Activity.
-- [ ] Step 9.7: Redesign Vendors, Reports, Activity, and Settings using the adaptive floating layout without adding deferred v1 features.
+- [x] Step 9.1: Install/configure shadcn infrastructure, including `components.json`, `cn()` utility, CSS variables, and the initial component primitives.
+- [x] Step 9.2: Update global styling to the Claude-inspired warm neutral palette with light-only theme behavior.
+- [x] Step 9.3: Rebuild the authenticated app shell with the floating icon rail and route-specific workbench layouts.
+- [x] Step 9.4: Redesign Dashboard as a full-width canvas with KPI strip, cash-flow card, expense breakdown, recent activity, and upcoming alerts.
+- [x] Step 9.5: Redesign Properties with icon rail, property list/search panel, and property workspace panel.
+- [x] Step 9.6: Refactor Property Workspace into shadcn tabs for Overview, Tenants, Agreements, Ledger/Rent, Expenses, Maintenance, Deposits, Files, and Activity.
+- [x] Step 9.7: Redesign Vendors, Reports, Activity, and Settings using the adaptive floating layout without adding deferred v1 features.
 - [ ] Step 9.8: Verify responsive desktop/mobile behavior, accessibility, lint, and build.
 
 ## Deferred Scope

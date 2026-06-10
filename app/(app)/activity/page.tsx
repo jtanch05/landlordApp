@@ -1,5 +1,13 @@
 import { redirect } from "next/navigation";
+import { Activity, Search } from "lucide-react";
 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -38,40 +46,51 @@ export default async function ActivityPage() {
   const events = await getActivity();
 
   return (
-    <div className="space-y-8">
-      <header className="border-b border-[#d8decf] pb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#4d6650]">
-          Portfolio
+    <div className="mx-auto max-w-[1120px] space-y-7">
+      <header>
+        <h1 className="text-2xl font-semibold">Activity</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Portfolio-wide accountability across property changes.
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-[#163300]">
-          Activity
-        </h1>
       </header>
 
-      <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-        <div className="space-y-4">
-          {events.length > 0 ? (
-            events.map((event) => (
-              <article className="border-l-2 border-[#9fe870] pl-4" key={event.id}>
-                <p className="text-sm font-semibold text-[#2f4a34]">
-                  {event.summary}
-                </p>
-                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#7a8577]">
-                  {event.action} · {event.entity_type} ·{" "}
-                  {new Date(event.created_at).toLocaleString()}
-                </p>
-                {event.actor_email ? (
-                  <p className="mt-1 text-xs text-[#4d6650]">{event.actor_email}</p>
-                ) : null}
-              </article>
-            ))
-          ) : (
-            <p className="text-sm leading-6 text-[#4d6650]">
-              Activity appears after records are created or updated.
-            </p>
-          )}
-        </div>
-      </section>
+      <label className="relative block">
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input className="h-12 rounded-xl bg-card pl-11" placeholder="Filter activity..." />
+      </label>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-5">
+            {events.length > 0 ? (
+              events.map((event) => (
+                <article className="border-l-2 border-primary pl-4" key={event.id}>
+                  <p className="text-sm font-semibold">{event.summary}</p>
+                  <p className="mt-1 text-xs uppercase text-muted-foreground">
+                    {event.action} - {event.entity_type} -{" "}
+                    {new Date(event.created_at).toLocaleString()}
+                  </p>
+                  {event.actor_email ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {event.actor_email}
+                    </p>
+                  ) : null}
+                </article>
+              ))
+            ) : (
+              <div className="flex min-h-60 items-center justify-center text-center text-sm text-muted-foreground">
+                <div>
+                  <Activity className="mx-auto mb-3 size-10 text-border" />
+                  Activity appears after records are created or updated.
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

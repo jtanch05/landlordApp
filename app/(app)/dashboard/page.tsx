@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowRight, Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   dismissReminderAction,
   reconcileRentRemindersAction,
@@ -69,83 +78,157 @@ async function getDashboardData() {
 
 export default async function DashboardPage() {
   const dashboard = await getDashboardData();
+  const netCashFlow = dashboard.rentCollected - dashboard.unpaidExpenses;
+  const actionRequired = dashboard.reminders.length;
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-4 border-b border-[#d8decf] pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto max-w-[1712px] space-y-7">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#4d6650]">
-            Portfolio
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Overview of your properties
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#163300]">
-            Dashboard
-          </h1>
         </div>
-        <form action={reconcileRentRemindersAction}>
-          <button
-            className="rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-            type="submit"
-          >
-            Refresh reminders
-          </button>
-        </form>
+        <Button asChild className="w-fit">
+          <Link className="inline-flex items-center gap-2" href="/properties">
+            <Plus className="size-4" />
+            Add Property
+          </Link>
+        </Button>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-4">
-        {[
-          ["Active properties", dashboard.activeProperties.toString()],
-          ["Rent collected", formatMyr(dashboard.rentCollected)],
-          ["Outstanding rent", formatMyr(dashboard.overdueRent)],
-          ["Unpaid expenses", formatMyr(dashboard.unpaidExpenses)],
-        ].map(([label, value]) => (
-          <div className="rounded-[8px] border border-[#d8decf] bg-white p-5" key={label}>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7a8577]">
-              {label}
-            </p>
-            <p className="mt-3 text-2xl font-semibold text-[#163300]">{value}</p>
-          </div>
-        ))}
+      <Card className="overflow-hidden p-0">
+        <section className="grid divide-y divide-border md:grid-cols-4 md:divide-x md:divide-y-0">
+          {[
+            ["Total Income", formatMyr(dashboard.rentCollected), ""],
+            ["Total Expenses", formatMyr(dashboard.unpaidExpenses), ""],
+            ["Net Cash Flow", formatMyr(netCashFlow), "text-primary"],
+            ["Action Required", actionRequired.toString(), ""],
+          ].map(([label, value, valueClass]) => (
+            <div className="p-7" key={label}>
+              <p className="text-sm font-medium text-muted-foreground">{label}</p>
+              <p className={`mt-3 text-3xl font-semibold ${valueClass}`}>
+                {value}
+              </p>
+            </div>
+          ))}
+        </section>
+      </Card>
+
+      <section className="grid gap-7 xl:grid-cols-[1.8fr_1fr]">
+        <Card className="min-h-[365px]">
+          <CardHeader>
+            <CardTitle>Monthly Cash Flow</CardTitle>
+            <Link
+              className="inline-flex items-center gap-2 text-sm font-medium text-foreground"
+              href="/reports"
+            >
+              Details
+              <ArrowRight className="size-4" />
+            </Link>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-8">
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-primary" />
+                Income
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-[#B1ADA1]" />
+                Expenses
+              </span>
+            </div>
+            <div className="mt-20 space-y-14">
+              <Separator />
+              <Separator />
+            </div>
+            <div className="mt-10 grid grid-cols-6 text-center text-xs font-semibold text-muted-foreground">
+              {["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month) => (
+                <span key={month}>{month}</span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="min-h-[365px]">
+          <CardHeader>
+            <CardTitle>Expense Breakdown</CardTitle>
+            <Link
+              className="inline-flex items-center gap-2 text-sm font-medium"
+              href="/reports"
+            >
+              View All
+              <ArrowRight className="size-4" />
+            </Link>
+          </CardHeader>
+          <Separator />
+          <CardContent className="flex min-h-64 items-center justify-center text-sm text-muted-foreground">
+            {dashboard.unpaidExpenses > 0
+              ? formatMyr(dashboard.unpaidExpenses)
+              : "No expenses recorded yet"}
+          </CardContent>
+        </Card>
       </section>
 
-      <section className="rounded-[8px] border border-[#d8decf] bg-white p-5">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold text-[#163300]">Reminders</h2>
-          <Link className="text-sm font-semibold text-[#2f4a34]" href="/activity">
-            View activity
-          </Link>
-        </div>
-        <div className="mt-5 space-y-3">
-          {dashboard.reminders.length > 0 ? (
-            dashboard.reminders.map((reminder) => (
-              <form
-                action={dismissReminderAction}
-                className="flex flex-col gap-3 rounded-[6px] border border-[#d8decf] px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
-                key={reminder.id}
-              >
-                <input name="reminderId" type="hidden" value={reminder.id} />
-                <div>
-                  <p className="text-sm font-semibold text-[#2f4a34]">
-                    {reminder.title}
-                  </p>
-                  <p className="mt-1 text-sm text-[#4d6650]">
-                    {reminder.description || "No details"} · {reminder.due_date}
-                  </p>
-                </div>
-                <button
-                  className="rounded-[6px] border border-[#163300] px-3 py-2 text-xs font-semibold text-[#163300]"
-                  type="submit"
+      <section className="grid gap-7 xl:grid-cols-[1.35fr_1fr]">
+        <Card className="min-h-44">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <Separator />
+          <CardContent className="flex min-h-24 items-center justify-center text-sm text-muted-foreground">
+            No activity yet
+          </CardContent>
+        </Card>
+
+        <Card className="min-h-44">
+          <CardHeader>
+            <CardTitle>Upcoming Alerts</CardTitle>
+            <Link
+              className="inline-flex items-center gap-2 text-sm font-medium"
+              href="/activity"
+            >
+              View All
+              <ArrowRight className="size-4" />
+            </Link>
+          </CardHeader>
+          <Separator />
+          <CardContent className="min-h-24 space-y-3 pt-6">
+            {dashboard.reminders.length > 0 ? (
+              dashboard.reminders.slice(0, 3).map((reminder) => (
+                <form
+                  action={dismissReminderAction}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-3"
+                  key={reminder.id}
                 >
-                  Dismiss
-                </button>
-              </form>
-            ))
-          ) : (
-            <p className="text-sm leading-6 text-[#4d6650]">
-              No active reminders. Refresh reminders after creating rent records.
-            </p>
-          )}
-        </div>
+                  <input name="reminderId" type="hidden" value={reminder.id} />
+                  <div>
+                    <p className="text-sm font-semibold">{reminder.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {reminder.due_date}
+                    </p>
+                  </div>
+                  <Button size="sm" type="submit" variant="secondary">
+                    Dismiss
+                  </Button>
+                </form>
+              ))
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">
+                No alerts - all clear
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </section>
+
+      <form action={reconcileRentRemindersAction}>
+        <Button type="submit" variant="secondary">
+          Refresh reminders
+        </Button>
+      </form>
     </div>
   );
 }

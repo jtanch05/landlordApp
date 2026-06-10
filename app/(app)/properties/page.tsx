@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Building2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { createPropertyAction } from "@/features/properties/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,162 +50,183 @@ async function getProperties() {
 
 export default async function PropertiesPage() {
   const properties = await getProperties();
+  const firstProperty = properties[0];
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-3 border-b border-[#d8decf] pb-6 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#4d6650]">
-            Portfolio
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#163300]">
-            Properties
-          </h1>
-        </div>
-        <div className="text-sm text-[#4d6650]">
-          {properties.length} active {properties.length === 1 ? "property" : "properties"}
-        </div>
-      </header>
-
-      <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-3">
-          {properties.length > 0 ? (
-            properties.map((property) => (
-              <Link
-                className="block rounded-[8px] border border-[#d8decf] bg-white p-5 transition hover:border-[#163300]"
-                href={`/properties/${property.id}`}
-                key={property.id}
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-[#163300]">
-                      {property.nickname}
-                    </h2>
-                    <p className="mt-1 text-sm text-[#4d6650]">
-                      {property.type}
-                      {property.city ? ` in ${property.city}` : ""}
-                    </p>
-                  </div>
-                  <span className="w-fit rounded-full bg-[#f2f5ee] px-3 py-1 text-xs font-semibold capitalize text-[#2f4a34]">
-                    {property.status}
-                  </span>
-                </div>
-                <p className="mt-4 text-sm text-[#4d6650]">
-                  {[property.city, property.state, property.postcode]
-                    .filter(Boolean)
-                    .join(", ") || "No address details yet"}
-                </p>
-              </Link>
-            ))
-          ) : (
-            <div className="rounded-[8px] border border-[#d8decf] bg-[#f7f7f2] p-6">
-              <h2 className="text-xl font-semibold text-[#163300]">
-                Add your first property
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-[#4d6650]">
-                Start with the property name, type, location, and whether it is
-                vacant or currently occupied.
-              </p>
-            </div>
-          )}
-        </div>
-
-        <form
-          action={createPropertyAction}
-          className="rounded-[8px] border border-[#d8decf] bg-white p-5"
-        >
-          <h2 className="text-lg font-semibold text-[#163300]">
-            New property
-          </h2>
-
-          <div className="mt-5 space-y-4">
-            <label className="block text-sm font-medium text-[#2f4a34]">
-              Nickname
-              <input
-                className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                name="nickname"
-                placeholder="Bukit Jalil Condo"
-                required
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-[#2f4a34]">
-              Property type
-              <input
-                className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                name="type"
-                placeholder="Condo, terrace, apartment"
-                required
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-[#2f4a34]">
-              Status
-              <select
-                className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] bg-white px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                name="status"
-                defaultValue="vacant"
-              >
-                <option value="vacant">Vacant</option>
-                <option value="occupied">Occupied</option>
-              </select>
-            </label>
-
-            <label className="block text-sm font-medium text-[#2f4a34]">
-              Address
-              <input
-                className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                name="addressLine1"
-                placeholder="Street address"
-              />
-            </label>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                City
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="city"
-                  placeholder="Kuala Lumpur"
-                />
-              </label>
-              <label className="block text-sm font-medium text-[#2f4a34]">
-                Postcode
-                <input
-                  className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                  name="postcode"
-                  placeholder="57000"
-                />
-              </label>
-            </div>
-
-            <label className="block text-sm font-medium text-[#2f4a34]">
-              State
-              <input
-                className="mt-2 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                name="state"
-                placeholder="Selangor"
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-[#2f4a34]">
-              Notes
-              <textarea
-                className="mt-2 min-h-24 w-full rounded-[6px] border border-[#cbd5c1] px-3 py-2 text-sm text-[#163300] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#9fe870]"
-                name="notes"
-                placeholder="Optional setup notes"
-              />
-            </label>
+    <div className="grid min-h-0 gap-5 lg:h-full xl:grid-cols-[378px_minmax(0,1fr)]">
+      <Card className="flex min-h-[640px] flex-col p-0 lg:h-full lg:min-h-0 lg:overflow-hidden">
+        <CardHeader className="pb-4">
+          <div>
+            <CardTitle>Properties</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {properties.length} {properties.length === 1 ? "property" : "properties"}
+            </p>
           </div>
+          <Button asChild size="icon" variant="ghost">
+            <a href="#new-property" aria-label="Add property">
+              <Plus className="size-5" />
+            </a>
+          </Button>
+        </CardHeader>
 
-          <button
-            className="mt-5 w-full rounded-[6px] bg-[#9fe870] px-4 py-3 text-sm font-semibold text-[#163300] transition hover:bg-[#8bdb5d]"
-            type="submit"
+        <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <label className="relative block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search properties..." />
+          </label>
+
+          <div className="space-y-3">
+            {properties.length > 0 ? (
+              properties.map((property, index) => (
+                <Link
+                  className={`flex items-center gap-3 rounded-xl border p-3 transition hover:bg-muted/35 ${
+                    index === 0 ? "border-border bg-card shadow-sm" : "border-transparent"
+                  }`}
+                  href={`/properties/${property.id}`}
+                  key={property.id}
+                >
+                  <span
+                    className={`flex size-10 items-center justify-center rounded-xl ${
+                      index === 0
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <Building2 className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">
+                      {property.nickname}
+                    </span>
+                    <span className="mt-1 block truncate text-sm text-muted-foreground">
+                      {[property.city, property.state].filter(Boolean).join(", ") ||
+                        property.type}
+                    </span>
+                  </span>
+                  <span className="hidden items-center gap-3 text-muted-foreground sm:flex">
+                    <Pencil className="size-4" />
+                    <Trash2 className="size-4" />
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+                No properties yet.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="flex min-h-[640px] flex-col p-0 lg:h-full lg:min-h-0 lg:overflow-hidden">
+        <CardHeader className="border-b border-border">
+          <div>
+            <CardTitle>
+              {firstProperty ? firstProperty.nickname : "No property selected"}
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {firstProperty
+                ? [firstProperty.city, firstProperty.state, firstProperty.postcode]
+                    .filter(Boolean)
+                    .join(", ") || "Open the workspace to manage records."
+                : "Create a property to start managing records."}
+            </p>
+          </div>
+          {firstProperty ? (
+            <Button asChild>
+              <Link href={`/properties/${firstProperty.id}`}>Open workspace</Link>
+            </Button>
+          ) : null}
+        </CardHeader>
+
+        <CardContent className="min-h-0 flex-1 overflow-y-auto p-6">
+          <section className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center lg:h-[calc(100%-84px)] lg:min-h-0">
+            <div>
+              <Building2 className="mx-auto size-12 text-border" />
+              <h2 className="mt-5 text-xl font-semibold">
+                {firstProperty ? "Select a property workspace" : "No property selected"}
+              </h2>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                {firstProperty
+                  ? "Open a property from the list to view tenants, agreements, ledger, expenses, maintenance, deposits, files, and activity."
+                  : "Add your first property to unlock the property workspace."}
+              </p>
+              {firstProperty ? (
+                <Button asChild className="mt-5">
+                  <Link href={`/properties/${firstProperty.id}`}>View details</Link>
+                </Button>
+              ) : null}
+            </div>
+          </section>
+
+          <details
+            className="mt-5 rounded-xl border border-border bg-card p-4"
+            id="new-property"
           >
-            Create property
-          </button>
-        </form>
-      </section>
+            <summary className="cursor-pointer text-sm font-semibold">
+              New property
+            </summary>
+            <form action={createPropertyAction} className="mt-5 grid gap-4 lg:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Nickname
+                <Input
+                  className="mt-2"
+                  name="nickname"
+                  placeholder="Bukit Jalil Condo"
+                  required
+                />
+              </label>
+
+              <label className="block text-sm font-medium">
+                Property type
+                <Input
+                  className="mt-2"
+                  name="type"
+                  placeholder="Condo, terrace, apartment"
+                  required
+                />
+              </label>
+
+              <label className="block text-sm font-medium">
+                Status
+                <Select className="mt-2" name="status" defaultValue="vacant">
+                  <option value="vacant">Vacant</option>
+                  <option value="occupied">Occupied</option>
+                </Select>
+              </label>
+
+              <label className="block text-sm font-medium">
+                Address
+                <Input className="mt-2" name="addressLine1" placeholder="Street address" />
+              </label>
+
+              <label className="block text-sm font-medium">
+                City
+                <Input className="mt-2" name="city" placeholder="Kuala Lumpur" />
+              </label>
+
+              <label className="block text-sm font-medium">
+                Postcode
+                <Input className="mt-2" name="postcode" placeholder="57000" />
+              </label>
+
+              <label className="block text-sm font-medium">
+                State
+                <Input className="mt-2" name="state" placeholder="Selangor" />
+              </label>
+
+              <label className="block text-sm font-medium lg:col-span-2">
+                Notes
+                <Textarea className="mt-2" name="notes" placeholder="Optional setup notes" />
+              </label>
+
+              <Button className="w-fit" type="submit">
+                Create property
+              </Button>
+            </form>
+          </details>
+        </CardContent>
+      </Card>
     </div>
   );
 }
