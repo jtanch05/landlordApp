@@ -46,29 +46,29 @@ export default async function ActivityPage() {
   const events = await getActivity();
 
   return (
-    <div className="mx-auto max-w-[1120px] space-y-7">
+    <div className="mx-auto max-w-[1120px] space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold">Activity</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-xl font-semibold">Activity</h1>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
           Portfolio-wide accountability across property changes.
         </p>
       </header>
 
       <label className="relative block">
-        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input className="h-12 rounded-xl bg-card pl-11" placeholder="Filter activity..." />
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input className="h-10 rounded-lg bg-card pl-10 text-[13px]" placeholder="Filter activity..." />
       </label>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Recent activity</CardTitle>
+        <CardHeader className="p-4 lg:p-5">
+          <CardTitle className="text-base font-semibold">Recent activity</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-5">
+        <CardContent className="p-4 lg:p-5 pt-0">
+          <div className="space-y-4">
             {events.length > 0 ? (
               events.map((event) => (
                 <article className="border-l-2 border-primary pl-4" key={event.id}>
-                  <p className="text-sm font-semibold">{event.summary}</p>
+                  <p className="text-[13px] font-semibold">{event.summary}</p>
                   <p className="mt-1 text-xs uppercase text-muted-foreground">
                     {event.action} - {event.entity_type} -{" "}
                     {new Date(event.created_at).toLocaleString()}
@@ -81,9 +81,9 @@ export default async function ActivityPage() {
                 </article>
               ))
             ) : (
-              <div className="flex min-h-60 items-center justify-center text-center text-sm text-muted-foreground">
+              <div className="flex min-h-40 items-center justify-center text-center text-[13px] text-muted-foreground">
                 <div>
-                  <Activity className="mx-auto mb-3 size-10 text-border" />
+                  <Activity className="mx-auto mb-2 size-8 text-border" />
                   Activity appears after records are created or updated.
                 </div>
               </div>

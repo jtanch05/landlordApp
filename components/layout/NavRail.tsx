@@ -35,15 +35,15 @@ export function NavRail() {
 
   return (
     <>
-      <aside className="fixed left-5 top-1/2 z-30 hidden w-[74px] -translate-y-1/2 rounded-[24px] border border-border bg-card px-3 py-5 shadow-sm lg:block">
-        <nav className="flex min-h-[490px] flex-col items-center gap-3">
+      <aside className="fixed left-4 top-1/2 z-30 hidden w-[56px] -translate-y-1/2 rounded-[20px] border border-border bg-card px-2 py-4 shadow-sm lg:block">
+        <nav className="flex min-h-[400px] flex-col items-center gap-1.5">
           <Tooltip label="Menu">
             <button
               aria-label="Menu"
-              className="mb-7 flex size-11 items-center justify-center rounded-2xl text-muted-foreground"
+              className="mb-5 flex size-9 items-center justify-center rounded-xl text-muted-foreground"
               type="button"
             >
-              <Menu className="size-5" />
+              <Menu className="size-[18px]" />
             </button>
           </Tooltip>
 
@@ -56,12 +56,12 @@ export function NavRail() {
                 <Link
                   aria-label={item.label}
                   className={cn(
-                    "flex size-11 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                    "flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
                     active && "bg-accent text-foreground",
                   )}
                   href={item.href}
                 >
-                  <Icon className="size-5" />
+                  <Icon className="size-[18px]" />
                 </Link>
               </Tooltip>
             );
@@ -93,7 +93,7 @@ export function NavRail() {
                   return (
                     <Link
                       className={cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground",
+                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted-foreground",
                         active && "bg-accent text-foreground",
                       )}
                       href={item.href}

@@ -46,40 +46,40 @@ export default async function SettingsPage() {
   const categories = await getExpenseCategories();
 
   return (
-    <div className="mx-auto max-w-[880px] space-y-8 py-4">
+    <div className="mx-auto max-w-[880px] space-y-5 py-2">
       <header>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-xl font-semibold">Settings</h1>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
           Portfolio defaults and operational configuration.
         </p>
       </header>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Portfolio</h2>
+ 
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Portfolio</h2>
         <Card>
           <CardContent className="divide-y divide-border p-0">
-            <div className="flex items-center justify-between gap-4 p-6">
-              <div className="flex items-center gap-4">
-                <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-primary">
-                  <Settings2 className="size-5" />
+            <div className="flex items-center justify-between gap-4 p-4 lg:p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 items-center justify-center rounded-lg bg-accent text-primary">
+                  <Settings2 className="size-4" />
                 </span>
                 <div>
-                  <h3 className="font-semibold">Profile and portfolio defaults</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <h3 className="text-[13px] font-semibold">Profile and portfolio defaults</h3>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
                     Theme switching stays deferred; v1 uses the light Claude-inspired palette.
                   </p>
                 </div>
               </div>
               <Badge variant="secondary">Light only</Badge>
             </div>
-            <div className="flex items-center justify-between gap-4 p-6">
-              <div className="flex items-center gap-4">
-                <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-primary">
-                  <UsersRound className="size-5" />
+            <div className="flex items-center justify-between gap-4 p-4 lg:p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 items-center justify-center rounded-lg bg-accent text-primary">
+                  <UsersRound className="size-4" />
                 </span>
                 <div>
-                  <h3 className="font-semibold">Members and invitations</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <h3 className="text-[13px] font-semibold">Members and invitations</h3>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
                     Property-level Co-owner access is managed inside each property workspace.
                   </p>
                 </div>
@@ -89,27 +89,27 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       </section>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Expense Categories</h2>
+ 
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Expense Categories</h2>
         <Card>
-          <CardHeader>
-            <CardTitle>Current categories</CardTitle>
+          <CardHeader className="p-4 lg:p-5 pb-0">
+            <CardTitle className="text-base font-semibold">Current categories</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2.5 p-4 lg:p-5">
             {categories.length > 0 ? (
               categories.map((category) => (
                 <div
-                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-4"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-3"
                   key={category.id}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-primary">
-                      <ReceiptText className="size-5" />
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-9 items-center justify-center rounded-lg bg-accent text-primary">
+                      <ReceiptText className="size-4" />
                     </span>
                     <div>
-                      <p className="font-semibold">{category.name}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="text-[13px] font-semibold">{category.name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {category.default_tax_deductible
                           ? "Tax deductible by default"
                           : "Not tax deductible by default"}
@@ -126,23 +126,23 @@ export default async function SettingsPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 Add categories such as Repairs, Assessment, Insurance, or Agent fees.
               </p>
             )}
           </CardContent>
         </Card>
-
+ 
         <form
           action={createExpenseCategoryAction}
-          className="grid gap-3 rounded-[18px] border border-border bg-card p-5 sm:grid-cols-[1fr_auto_auto]"
+          className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[1fr_auto_auto]"
         >
-          <Input name="name" placeholder="New category name" required />
-          <label className="flex items-center gap-2 text-sm font-medium">
+          <Input className="h-9 text-[13px]" name="name" placeholder="New category name" required />
+          <label className="flex items-center gap-2 text-[13px] font-medium">
             <input name="defaultTaxDeductible" type="checkbox" />
             Tax deductible
           </label>
-          <Button type="submit">
+          <Button size="sm" type="submit">
             <Plus className="size-4" />
             Add category
           </Button>

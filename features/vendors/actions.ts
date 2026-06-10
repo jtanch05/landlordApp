@@ -15,13 +15,22 @@ export async function createVendorAction(formData: FormData) {
   const supabase = await createClient();
   const onboarding = await ensureUserProfileAndDefaultPortfolio(supabase);
 
+  const ratingRaw = String(formData.get("rating") ?? "").trim();
+  const ratingNum = ratingRaw ? Number(ratingRaw) : null;
+  const rating =
+    ratingNum !== null && Number.isInteger(ratingNum) && ratingNum >= 1 && ratingNum <= 5
+      ? ratingNum
+      : null;
+
   const { error } = await supabase.from("vendors").insert({
     created_by: onboarding.profileId,
     email: text(formData, "email"),
+    last_used_date: text(formData, "lastUsedDate"),
     name: text(formData, "name", true),
     notes: text(formData, "notes"),
     phone: text(formData, "phone"),
     portfolio_id: onboarding.portfolioId,
+    rating,
     service_type: text(formData, "serviceType"),
   });
 

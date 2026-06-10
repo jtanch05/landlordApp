@@ -13,6 +13,7 @@ type FormDialogProps = {
   children: ReactNode;
   contentClassName?: string;
   description?: string;
+  dialogClassName?: string;
   title: string;
   triggerAriaLabel?: string;
   triggerClassName?: string;
@@ -26,6 +27,7 @@ export function FormDialog({
   children,
   contentClassName,
   description,
+  dialogClassName,
   title,
   triggerAriaLabel,
   triggerClassName,
@@ -56,7 +58,10 @@ export function FormDialog({
       </Button>
 
       <Dialog
-        className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-48px)] w-[min(860px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] backdrop:bg-black/60"
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-48px)] w-[min(860px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] backdrop:bg-black/60",
+          dialogClassName,
+        )}
         onClick={closeOnBackdropClick}
         ref={dialogRef}
       >

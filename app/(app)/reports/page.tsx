@@ -54,15 +54,16 @@ export default async function ReportsPage() {
   const netCashFlow = summary.rentCollected - summary.expenseTotal;
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-7">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto max-w-[1440px] space-y-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Reports</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-xl font-semibold">Reports</h1>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             PDF-ready portfolio and property statements.
           </p>
         </div>
         <FormDialog
+          dialogClassName="w-[min(480px,calc(100vw-32px))]"
           title="New Report"
           triggerIcon={<Plus className="size-4" />}
           triggerLabel="New Report"
@@ -91,50 +92,50 @@ export default async function ReportsPage() {
           </div>
         </FormDialog>
       </header>
-
+ 
       <section className="grid gap-4 md:grid-cols-3">
         {[
           ["Rent due", formatMyr(summary.rentDue)],
           ["Rent collected", formatMyr(summary.rentCollected)],
           ["Expenses", formatMyr(summary.expenseTotal)],
         ].map(([label, value]) => (
-          <Card className="rounded-[18px]" key={label}>
-            <CardContent className="p-6">
-              <p className="text-sm font-medium text-muted-foreground">{label}</p>
-              <p className="mt-3 text-3xl font-semibold">{value}</p>
+          <Card className="rounded-xl" key={label}>
+            <CardContent className="p-4 lg:p-5">
+              <p className="text-[13px] font-medium text-muted-foreground">{label}</p>
+              <p className="mt-2 text-xl font-semibold lg:text-2xl">{value}</p>
             </CardContent>
           </Card>
         ))}
       </section>
-
+ 
       <section>
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 lg:p-5 flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Basic property statement</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <CardTitle className="text-base font-semibold">Basic property statement</CardTitle>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
                 Current portfolio summary
               </p>
             </div>
             <Badge variant="secondary">PDF only</Badge>
           </CardHeader>
           <Separator />
-          <CardContent className="space-y-4 pt-6">
-            <div className="flex justify-between border-b border-border pb-3 text-sm">
+          <CardContent className="space-y-3 p-4 lg:p-5">
+            <div className="flex justify-between border-b border-border pb-2.5 text-[13px]">
               <span>Rent collected</span>
-              <strong>{formatMyr(summary.rentCollected)}</strong>
+              <strong className="font-semibold">{formatMyr(summary.rentCollected)}</strong>
             </div>
-            <div className="flex justify-between border-b border-border pb-3 text-sm">
+            <div className="flex justify-between border-b border-border pb-2.5 text-[13px]">
               <span>Expenses</span>
-              <strong>{formatMyr(summary.expenseTotal)}</strong>
+              <strong className="font-semibold">{formatMyr(summary.expenseTotal)}</strong>
             </div>
-            <div className="flex justify-between pt-2 text-lg">
+            <div className="flex justify-between pt-1 text-base font-semibold">
               <span>Net cash flow</span>
               <strong className="text-primary">{formatMyr(netCashFlow)}</strong>
             </div>
-            <div className="mt-8 flex min-h-48 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 text-center text-sm text-muted-foreground">
+            <div className="mt-6 flex min-h-36 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 text-center text-[13px] text-muted-foreground">
               <div>
-                <FileText className="mx-auto mb-3 size-10 text-border" />
+                <FileText className="mx-auto mb-2 size-8 text-border" />
                 PDF preview appears after report rendering is implemented.
               </div>
             </div>

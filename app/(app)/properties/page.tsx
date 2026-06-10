@@ -52,7 +52,7 @@ export default async function PropertiesPage() {
   const firstProperty = properties[0];
 
   return (
-    <div className="grid min-h-0 gap-5 lg:h-full xl:grid-cols-[378px_minmax(0,1fr)]">
+    <div className="grid min-h-0 gap-4 lg:h-full xl:grid-cols-[280px_minmax(0,1fr)]">
       <Card className="flex min-h-[640px] flex-col p-0 lg:h-full lg:min-h-0 lg:overflow-hidden">
         <CardHeader className="pb-4">
           <div>
@@ -63,7 +63,7 @@ export default async function PropertiesPage() {
           </div>
           <CreatePropertyDialog
             triggerAriaLabel="Add property"
-            triggerIcon={<Plus className="size-5" />}
+            triggerIcon={<Plus className="size-4" />}
             triggerLabel={<span className="sr-only">Add property</span>}
             triggerSize="icon"
             triggerClassName="bg-transparent text-foreground hover:bg-muted"
@@ -90,19 +90,19 @@ export default async function PropertiesPage() {
                     href={`/properties/${property.id}`}
                   >
                     <span
-                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
                         index === 0
                           ? "bg-foreground text-background"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      <Building2 className="size-5" />
+                      <Building2 className="size-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">
+                      <span className="block truncate text-[13px] font-semibold">
                         {property.nickname}
                       </span>
-                      <span className="mt-1 block truncate text-sm text-muted-foreground">
+                      <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">
                         {[property.city, property.state].filter(Boolean).join(", ") ||
                           property.type}
                       </span>
@@ -136,7 +136,7 @@ export default async function PropertiesPage() {
                 </div>
               ))
             ) : (
-              <div className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed border-border p-4 text-[13px] text-muted-foreground">
                 No properties yet.
               </div>
             )}
@@ -165,14 +165,14 @@ export default async function PropertiesPage() {
           ) : null}
         </CardHeader>
 
-        <CardContent className="min-h-0 flex-1 overflow-y-auto p-6">
-          <section className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center lg:h-[calc(100%-84px)] lg:min-h-0">
+        <CardContent className="min-h-0 flex-1 overflow-y-auto p-5">
+          <section className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center lg:h-[calc(100%-84px)] lg:min-h-0">
             <div>
-              <Building2 className="mx-auto size-12 text-border" />
-              <h2 className="mt-5 text-xl font-semibold">
+              <Building2 className="mx-auto size-10 text-border" />
+              <h2 className="mt-4 text-lg font-semibold">
                 {firstProperty ? "Select a property workspace" : "No property selected"}
               </h2>
-              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              <p className="mt-1.5 max-w-md text-[13px] text-muted-foreground">
                 {firstProperty
                   ? "Open a property from the list to view tenants, agreements, ledger, expenses, maintenance, deposits, files, and activity."
                   : "Add your first property to unlock the property workspace."}

@@ -363,9 +363,9 @@ function DefinitionRow({
   label: string;
 }) {
   return (
-    <div className="grid gap-4 border-b border-border py-4 sm:grid-cols-[160px_minmax(0,1fr)]">
-      <dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-semibold leading-6 text-foreground">{children}</dd>
+    <div className="grid gap-2 border-b border-border py-2.5 sm:grid-cols-[140px_minmax(0,1fr)] text-[13px]">
+      <dt className="font-semibold text-muted-foreground">{label}</dt>
+      <dd className="font-semibold leading-5 text-foreground">{children}</dd>
     </div>
   );
 }
@@ -468,24 +468,24 @@ export default async function PropertyWorkspacePage({
   ]);
 
   return (
-    <div className="grid min-h-0 gap-5 lg:h-full xl:grid-cols-[378px_minmax(0,1fr)]">
+    <div className="grid min-h-0 gap-4 lg:h-full xl:grid-cols-[280px_minmax(0,1fr)]">
       <Card className="flex min-h-[640px] flex-col p-0 lg:h-full lg:min-h-0 lg:overflow-hidden">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3">
           <div>
             <CardTitle>Properties</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               {properties.length} {properties.length === 1 ? "property" : "properties"}
             </p>
           </div>
           <CreatePropertyDialog
             triggerAriaLabel="Add property"
-            triggerIcon={<Plus className="size-5" />}
+            triggerIcon={<Plus className="size-4" />}
             triggerLabel={<span className="sr-only">Add property</span>}
             triggerSize="icon"
             triggerClassName="bg-transparent text-foreground hover:bg-muted"
           />
         </CardHeader>
-        <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+        <CardContent className="min-h-0 flex-1 space-y-3 overflow-y-auto">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-9" placeholder="Search properties..." />
@@ -493,7 +493,7 @@ export default async function PropertyWorkspacePage({
           <div className="space-y-3">
             {properties.map((item) => (
               <div
-                className={`flex items-center gap-3 rounded-xl border p-3 transition hover:bg-muted/35 ${
+                className={`flex items-center gap-2.5 rounded-xl border p-2.5 transition hover:bg-muted/35 ${
                   item.id === propertyId
                     ? "border-border bg-card shadow-sm"
                     : "border-transparent"
@@ -501,28 +501,28 @@ export default async function PropertyWorkspacePage({
                 key={item.id}
               >
                 <Link
-                  className="flex min-w-0 flex-1 items-center gap-3"
+                  className="flex min-w-0 flex-1 items-center gap-2.5"
                   href={`/properties/${item.id}?tab=${activeTab}`}
                 >
                   <span
-                    className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
                       item.id === propertyId
                         ? "bg-foreground text-background"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    <Building2 className="size-5" />
+                    <Building2 className="size-4" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
+                    <span className="block truncate text-[13px] font-semibold">
                       {item.nickname}
                     </span>
-                    <span className="mt-1 flex items-center gap-2 truncate text-sm text-muted-foreground">
+                    <span className="mt-0.5 flex items-center gap-1.5 truncate text-[13px] text-muted-foreground">
                       <span className="truncate">
                         {item.state || item.city || item.type}
                       </span>
                       {item.id === propertyId ? (
-                        <span className="size-2 shrink-0 rounded-full bg-emerald-600" />
+                        <span className="size-1.5 shrink-0 rounded-full bg-emerald-600" />
                       ) : null}
                     </span>
                   </span>
@@ -555,16 +555,16 @@ export default async function PropertyWorkspacePage({
       </Card>
 
       <Card className="flex min-h-[640px] flex-col overflow-hidden p-0 lg:h-full lg:min-h-0">
-        <CardHeader className="shrink-0 px-9 py-7">
+        <CardHeader className="shrink-0 px-6 py-4">
           <div>
-            <CardTitle className="text-2xl">{property.nickname}</CardTitle>
+            <CardTitle className="text-lg font-semibold">{property.nickname}</CardTitle>
           </div>
         </CardHeader>
 
         <PropertyWorkspaceTabsClient initialTab={activeTab}>
-            <div data-tab="overview" className="space-y-8">
+            <div data-tab="overview" className="space-y-6">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Property Information</h2>
+                <h2 className="text-lg font-semibold">Property Information</h2>
                 <FormDialog
                   title="Edit Property"
                   triggerIcon={<Pencil className="size-4" />}
@@ -631,9 +631,9 @@ export default async function PropertyWorkspacePage({
               </dl>
             </div>
 
-            <div data-tab="tenants" className="space-y-8">
+            <div data-tab="tenants" className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Associated Tenants</h2>
+                <h2 className="text-lg font-semibold">Associated Tenants</h2>
                 <FormDialog
                   title="Add Tenant"
                   triggerIcon={<Plus className="size-4" />}
@@ -681,7 +681,7 @@ export default async function PropertyWorkspacePage({
                   </form>
                 </FormDialog>
               </div>
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3">
                 <label className="relative min-w-[260px] flex-1">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input className="pl-9" placeholder="Search tenants..." />
@@ -696,9 +696,9 @@ export default async function PropertyWorkspacePage({
               </div>
               <div className="space-y-3">
                 {tenants.map((tenant) => (
-                  <div className="flex items-center gap-4 rounded-2xl border border-border px-7 py-5" key={tenant.id}>
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                      <UsersRound className="size-5" />
+                  <div className="flex items-center gap-3.5 rounded-2xl border border-border px-5 py-3.5" key={tenant.id}>
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <UsersRound className="size-4.5" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-semibold">{tenant.name}</h3>
@@ -723,9 +723,9 @@ export default async function PropertyWorkspacePage({
               </div>
             </div>
 
-            <div data-tab="agreements" className="space-y-8">
+            <div data-tab="agreements" className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Lease Agreements</h2>
+                <h2 className="text-lg font-semibold">Lease Agreements</h2>
                 <FormDialog
                   title="Add Agreement"
                   triggerIcon={<Plus className="size-4" />}
@@ -801,7 +801,7 @@ export default async function PropertyWorkspacePage({
                     .reduce((sum, deposit) => sum + deposit.amount_cents, 0);
 
                   return (
-                    <article className="rounded-[22px] border border-border px-7 py-6 shadow-sm" key={agreement.id}>
+                    <article className="rounded-2xl border border-border px-5 py-4 shadow-sm" key={agreement.id}>
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="text-lg font-semibold">{property.nickname}</h3>
@@ -816,7 +816,7 @@ export default async function PropertyWorkspacePage({
                           <Button aria-label="Archive agreement" size="icon" type="button" variant="ghost"><Trash2 className="size-4" /></Button>
                         </div>
                       </div>
-                      <div className="mt-7 grid gap-5 md:grid-cols-2">
+                      <div className="mt-5 grid gap-4 md:grid-cols-2">
                         <div>
                           <p className="text-xs font-semibold uppercase text-muted-foreground">Period</p>
                           <p className="mt-2 font-semibold">{formatDate(agreement.start_date)} - {formatDate(agreement.end_date)}</p>
@@ -841,7 +841,7 @@ export default async function PropertyWorkspacePage({
                         </div>
                         <div className="mt-3 h-1 rounded-full bg-muted" />
                       </div>
-                      <button className="mt-5 inline-flex items-center gap-2 text-sm font-medium" type="button">
+                      <button className="mt-4 inline-flex items-center gap-2 text-sm font-medium" type="button">
                         <Shield className="size-4" />
                         Deposits ({deposits.length})
                         <ChevronRight className="size-4 rotate-90" />
@@ -855,9 +855,9 @@ export default async function PropertyWorkspacePage({
               </div>
             </div>
 
-            <div data-tab="rent" className="space-y-8">
+            <div data-tab="rent" className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Rent Ledger</h2>
+                <h2 className="text-lg font-semibold">Rent Ledger</h2>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button className="text-red-600 hover:text-red-700" type="button" variant="ghost">
                     <CircleAlert className="size-4" /> Clear All
@@ -943,12 +943,12 @@ export default async function PropertyWorkspacePage({
                     </p>
                     <div className="mt-3 space-y-3">
                       {rentRecords.slice(0, 1).map((record) => (
-                        <div className="flex items-center gap-4 rounded-2xl border border-border px-7 py-5" key={record.id}>
-                          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                            <CircleAlert className="size-5" />
+                        <div className="flex items-center gap-3.5 rounded-2xl border border-border px-5 py-3.5" key={record.id}>
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                            <CircleAlert className="size-4.5" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <h3 className="text-lg font-semibold">{formatMonth(record.month)}</h3>
+                            <h3 className="text-base font-semibold">{formatMonth(record.month)}</h3>
                             <p className="text-sm text-muted-foreground">{property.nickname}</p>
                             <p className="text-sm font-semibold text-red-600">{record.status === "paid" ? "Paid" : "Due now"}</p>
                           </div>
@@ -977,9 +977,9 @@ export default async function PropertyWorkspacePage({
               )}
             </div>
 
-            <div data-tab="expenses" className="space-y-8">
+            <div data-tab="expenses" className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Property Expenses</h2>
+                <h2 className="text-lg font-semibold">Property Expenses</h2>
                 <div className="flex flex-wrap items-center gap-3">
                   <label className="relative w-[280px] max-w-full">
                     <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -1068,7 +1068,7 @@ export default async function PropertyWorkspacePage({
                 ))}
               </div>
               <div className="overflow-hidden rounded-[22px] border border-border">
-                <div className="grid grid-cols-[1fr_2fr_1.4fr_1.2fr_1fr_1.2fr_1.2fr_80px] bg-muted/50 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="grid grid-cols-[1fr_2fr_1.4fr_1.2fr_1fr_1.2fr_1.2fr_80px] bg-muted/50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <span>Type</span>
                   <span>Description</span>
                   <span>Property</span>
@@ -1079,7 +1079,7 @@ export default async function PropertyWorkspacePage({
                   <span />
                 </div>
                 {expenses.map((expense) => (
-                  <div className="grid grid-cols-[1fr_2fr_1.4fr_1.2fr_1fr_1.2fr_1.2fr_80px] items-center border-t border-border px-6 py-5 text-sm" key={expense.id}>
+                  <div className="grid grid-cols-[1fr_2fr_1.4fr_1.2fr_1fr_1.2fr_1.2fr_80px] items-center border-t border-border px-4 py-3.5 text-[13px]" key={expense.id}>
                     <span className="font-semibold text-red-600"><ReceiptText className="mr-2 inline size-4" />Expense</span>
                     <span className="font-semibold">{expense.description}</span>
                     <span>{property.nickname}</span>
@@ -1093,7 +1093,7 @@ export default async function PropertyWorkspacePage({
                     </span>
                   </div>
                 ))}
-                <div className="grid grid-cols-[1fr_2fr_1.4fr_1.2fr_1fr_1.2fr_1.2fr_80px] border-t border-border px-6 py-5 text-sm font-semibold">
+                <div className="grid grid-cols-[1fr_2fr_1.4fr_1.2fr_1fr_1.2fr_1.2fr_80px] border-t border-border px-4 py-3.5 text-[13px] font-semibold">
                   <span className="col-span-6 text-right">Total</span>
                   <span className="text-right">{formatMyr(expenses.reduce((sum, expense) => sum + expense.amount_cents, 0))}</span>
                   <span />
@@ -1104,9 +1104,9 @@ export default async function PropertyWorkspacePage({
               </div>
             </div>
 
-            <div data-tab="maintenance" className="space-y-8">
+            <div data-tab="maintenance" className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">Maintenance</h2>
+                <h2 className="text-lg font-semibold">Maintenance</h2>
                 <FormDialog
                   title="Log Maintenance Issue"
                   triggerIcon={<Plus className="size-4" />}
@@ -1182,7 +1182,7 @@ export default async function PropertyWorkspacePage({
               </div>
               <div className="space-y-3">
                 {maintenanceIssues.map((issue) => (
-                  <div className="flex items-center gap-4 rounded-2xl border border-border px-7 py-5" key={issue.id}>
+                  <div className="flex items-center gap-3.5 rounded-2xl border border-border px-5 py-3.5" key={issue.id}>
                     <Wrench className="size-5 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold">{issue.description}</h3>
@@ -1201,7 +1201,7 @@ export default async function PropertyWorkspacePage({
             <div data-tab="deposits" className="grid gap-8 xl:grid-cols-[1fr_340px]">
               <div className="space-y-3">
                 {deposits.map((deposit) => (
-                  <form action={updateDepositStatusAction} className="rounded-xl border border-border p-5" key={deposit.id}>
+                  <form action={updateDepositStatusAction} className="rounded-xl border border-border p-4" key={deposit.id}>
                     <input name="propertyId" type="hidden" value={property.id} />
                     <input name="depositId" type="hidden" value={deposit.id} />
                     <div className="flex items-start justify-between gap-3">
@@ -1252,7 +1252,7 @@ export default async function PropertyWorkspacePage({
             <div data-tab="files" className="space-y-3">
               {attachments.map((attachment) => (
                 <Card className="rounded-xl shadow-none" key={attachment.id}>
-                  <CardContent className="flex items-start justify-between gap-3 p-5">
+                  <CardContent className="flex items-start justify-between gap-3 p-4">
                     <div>
                       <h2 className="font-semibold">{attachment.file_name}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
