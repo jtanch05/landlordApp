@@ -12,7 +12,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
   dismissReminderAction,
-  reconcileRentRemindersAction,
 } from "@/features/reminders/actions";
 import { CreatePropertyDialog } from "@/features/properties/components/CreatePropertyDialog";
 import { createClient } from "@/lib/supabase/server";
@@ -223,12 +222,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </section>
-
-      <form action={reconcileRentRemindersAction}>
-        <Button type="submit" variant="secondary">
-          Refresh reminders
-        </Button>
-      </form>
     </div>
   );
 }

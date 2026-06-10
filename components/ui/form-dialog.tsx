@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { MouseEvent } from "react";
 import { useRef } from "react";
 import { X } from "lucide-react";
 
@@ -34,6 +35,11 @@ export function FormDialog({
   triggerVariant = "default",
 }: FormDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeOnBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
+    if (event.target === dialogRef.current) {
+      dialogRef.current?.close();
+    }
+  };
 
   return (
     <>
@@ -51,6 +57,7 @@ export function FormDialog({
 
       <Dialog
         className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-48px)] w-[min(860px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] backdrop:bg-black/60"
+        onClick={closeOnBackdropClick}
         ref={dialogRef}
       >
         <div className="flex min-h-0 max-h-[calc(100vh-48px)] flex-col">
