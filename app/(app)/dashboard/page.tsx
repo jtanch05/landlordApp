@@ -83,8 +83,8 @@ export default async function DashboardPage() {
   const actionRequired = dashboard.reminders.length;
 
   return (
-    <div className="mx-auto max-w-[1712px] space-y-7">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto max-w-[1680px] space-y-5 pb-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -106,9 +106,9 @@ export default async function DashboardPage() {
             ["Net Cash Flow", formatMyr(netCashFlow), "text-primary"],
             ["Action Required", actionRequired.toString(), ""],
           ].map(([label, value, valueClass]) => (
-            <div className="p-7" key={label}>
+            <div className="p-5 lg:p-6" key={label}>
               <p className="text-sm font-medium text-muted-foreground">{label}</p>
-              <p className={`mt-3 text-3xl font-semibold ${valueClass}`}>
+              <p className={`mt-3 text-2xl font-semibold lg:text-3xl ${valueClass}`}>
                 {value}
               </p>
             </div>
@@ -116,9 +116,9 @@ export default async function DashboardPage() {
         </section>
       </Card>
 
-      <section className="grid gap-7 xl:grid-cols-[1.8fr_1fr]">
-        <Card className="min-h-[365px]">
-          <CardHeader>
+      <section className="grid gap-5 xl:grid-cols-[1.8fr_1fr]">
+        <Card className="min-h-[300px] xl:min-h-[clamp(300px,33vh,365px)]">
+          <CardHeader className="p-5 lg:p-6">
             <CardTitle>Monthly Cash Flow</CardTitle>
             <Link
               className="inline-flex items-center gap-2 text-sm font-medium text-foreground"
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-8">
+          <CardContent className="p-5 pt-7 lg:p-6 lg:pt-7">
             <div className="flex gap-6 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-primary" />
@@ -140,11 +140,11 @@ export default async function DashboardPage() {
                 Expenses
               </span>
             </div>
-            <div className="mt-20 space-y-14">
+            <div className="mt-14 space-y-10 lg:mt-16 lg:space-y-12">
               <Separator />
               <Separator />
             </div>
-            <div className="mt-10 grid grid-cols-6 text-center text-xs font-semibold text-muted-foreground">
+            <div className="mt-8 grid grid-cols-6 text-center text-xs font-semibold text-muted-foreground lg:mt-9">
               {["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month) => (
                 <span key={month}>{month}</span>
               ))}
@@ -152,8 +152,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="min-h-[365px]">
-          <CardHeader>
+        <Card className="min-h-[300px] xl:min-h-[clamp(300px,33vh,365px)]">
+          <CardHeader className="p-5 lg:p-6">
             <CardTitle>Expense Breakdown</CardTitle>
             <Link
               className="inline-flex items-center gap-2 text-sm font-medium"
@@ -164,7 +164,7 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <Separator />
-          <CardContent className="flex min-h-64 items-center justify-center text-sm text-muted-foreground">
+          <CardContent className="flex min-h-[220px] items-center justify-center p-5 text-sm text-muted-foreground lg:p-6">
             {dashboard.unpaidExpenses > 0
               ? formatMyr(dashboard.unpaidExpenses)
               : "No expenses recorded yet"}
@@ -172,19 +172,19 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
-      <section className="grid gap-7 xl:grid-cols-[1.35fr_1fr]">
-        <Card className="min-h-44">
-          <CardHeader>
+      <section className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
+        <Card className="min-h-[136px]">
+          <CardHeader className="p-5 lg:p-6">
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <Separator />
-          <CardContent className="flex min-h-24 items-center justify-center text-sm text-muted-foreground">
+          <CardContent className="flex min-h-20 items-center justify-center p-5 text-sm text-muted-foreground lg:p-6">
             No activity yet
           </CardContent>
         </Card>
 
-        <Card className="min-h-44">
-          <CardHeader>
+        <Card className="min-h-[136px]">
+          <CardHeader className="p-5 lg:p-6">
             <CardTitle>Upcoming Alerts</CardTitle>
             <Link
               className="inline-flex items-center gap-2 text-sm font-medium"
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <Separator />
-          <CardContent className="min-h-24 space-y-3 pt-6">
+          <CardContent className="min-h-20 space-y-3 p-5 lg:p-6">
             {dashboard.reminders.length > 0 ? (
               dashboard.reminders.slice(0, 3).map((reminder) => (
                 <form
